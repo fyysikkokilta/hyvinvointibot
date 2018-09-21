@@ -16,18 +16,24 @@ Counts number of messages a user has sent. Starts over if silent for 10 seconds.
 Illustrates the basic usage of `DelegateBot` and `ChatHandler`.
 """
 
-class HyvinvointiChat(telepot.helper.ChatHandler): #TODO: should be telepot.helper.CallbackQueryOriginHandler
-
+class HyvinvointiChatStarter(telepot.helper.ChatHandler): 
     def __init__(self, *args, **kwargs):
         super(HyvinvointiChat, self).__init__(*args, **kwargs)
-        self._count = 0
+        #self._count = 0
         self.stringTreeParser = StringTreeParser()
 
 
     def on_chat_message(self, msg):
-        self._count += 1
+        #self._count += 1
+        #self.sender.sendMessage(self._count)
+        self.sender.sendMessage()                   #TODO: Ask the first question, maybe change the stringtree?
 
-        self.sender.sendMessage(self._count)
+
+
+class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
+    def __init__(self, *args, **kwargs):
+        super(HyvinvointiChat, self).__init__(*args, **kwargs)
+        self.stringTreeParser = StringTreeParser()
 
     def on_callback_query(self, msg):
         query_id, form_id, query_data = telepot.glance(msg, flavor = "callback_query")
@@ -48,10 +54,14 @@ class HyvinvointiChat(telepot.helper.ChatHandler): #TODO: should be telepot.help
 
         self.sender.sendMessage(next_msg["msg"], reply_markup = reply_markup)
 
+
 bot = telepot.DelegatorBot(BOT_TOKEN, [
     pave_event_space()(
         per_chat_id(), create_open, HyvinvointiChat, timeout=BOT_TIMEOUT
     ),
+    pave_event_space()(
+        per_callback_query_origin(), create_open, HyvinvointiCHat, timeout=BOT_TIMEOUT
+    )
 ])
 MessageLoop(bot).run_as_thread()
 print('Listening ...')
