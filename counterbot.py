@@ -48,7 +48,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler): #TODO: should be telepot.help
 
         self.sender.sendMessage(next_msg["msg"], reply_markup = reply_markup)
 
-
 bot = telepot.DelegatorBot(BOT_TOKEN, [
     pave_event_space()(
         per_chat_id(), create_open, HyvinvointiChat, timeout=BOT_TIMEOUT
@@ -59,6 +58,3 @@ print('Listening ...')
 
 while 1:
     time.sleep(10)
-
-
-:D
