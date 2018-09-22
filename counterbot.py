@@ -6,9 +6,12 @@ import telepot
 from telepot.loop import MessageLoop
 from telepot.delegate import per_chat_id, create_open, pave_event_space
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
-from stringtree import StringTree
+from stringtree import STRING_TREE, StringTreeParser
+from telepot.delegate import (
+    per_chat_id, per_callback_query_origin, create_open, pave_event_space)
 
-BOT_TOKEN = "508674817:AAEOm7RVU64DB1733Xz7VCQ71cgjmpr9EoE"
+
+BOT_TOKEN = "546681733:AAFRjJKFkmKBfsxfZnqnJcLpCllPX554lyU"         #currently @stikubot
 BOT_TIMEOUT = 5 * 60 # 5 minutes
 
 """
@@ -18,7 +21,7 @@ Illustrates the basic usage of `DelegateBot` and `ChatHandler`.
 
 class HyvinvointiChatStarter(telepot.helper.ChatHandler): 
     def __init__(self, *args, **kwargs):
-        super(HyvinvointiChat, self).__init__(*args, **kwargs)
+        super(HyvinvointiChatStarter, self).__init__(*args, **kwargs)
         #self._count = 0
         self.stringTreeParser = StringTreeParser()
 
@@ -26,8 +29,22 @@ class HyvinvointiChatStarter(telepot.helper.ChatHandler):
     def on_chat_message(self, msg):
         #self._count += 1
         #self.sender.sendMessage(self._count)
-        self.sender.sendMessage()                   #TODO: Ask the first question, maybe change the stringtree?
 
+        content_type, chat_type, chat_id = telepot.glance(msg)
+
+        print("\non_chat_message()\n")
+        print(msg)
+
+        self.sender.sendMessage(
+            "Paina haluamaasi kategoriaa aloittaaksesi",
+            reply_markup = InlineKeyboardMarkup(
+                inline_keyboard=[[
+                    InlineKeyboardButton(text='Liikunta', callback_data = 'liikunta_choice'),
+                ]]
+            )
+        )               
+        print("\Starter completed, moving on to callback\n")
+        self.close()
 
 
 class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
@@ -52,15 +69,15 @@ class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
                 )
             reply_markup = InlineKeyboardMarkup(inline_keyboard = inline_keyboard)
 
-        self.sender.sendMessage(next_msg["msg"], reply_markup = reply_markup)
+        self.editor.editMessageText(next_msg["msg"], reply_markup = reply_markup)
 
 
 bot = telepot.DelegatorBot(BOT_TOKEN, [
     pave_event_space()(
-        per_chat_id(), create_open, HyvinvointiChat, timeout=BOT_TIMEOUT
+        per_chat_id(), create_open, HyvinvointiChatStarter, timeout=BOT_TIMEOUT
     ),
     pave_event_space()(
-        per_callback_query_origin(), create_open, HyvinvointiCHat, timeout=BOT_TIMEOUT
+        per_callback_query_origin(), create_open, HyvinvointiChat, timeout=BOT_TIMEOUT
     )
 ])
 MessageLoop(bot).run_as_thread()
