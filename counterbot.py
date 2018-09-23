@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding = utf-8
 
 import sys
 import time
@@ -35,15 +35,16 @@ class HyvinvointiChatStarter(telepot.helper.ChatHandler):
         print("\non_chat_message()\n")
         print(msg)
 
-        self.sender.sendMessage(
-            "Paina haluamaasi kategoriaa aloittaaksesi",
-            reply_markup = InlineKeyboardMarkup(
-                inline_keyboard=[[
-                    InlineKeyboardButton(text='Liikunta', callback_data = 'liikunta_choice'),
-                ]]
-            )
-        )               
-        print("\Starter completed, moving on to callback\n")
+        if msg["text"] == "aloita":
+            self.sender.sendMessage(
+                "Paina haluamaasi kategoriaa aloittaaksesi",
+                reply_markup = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(text="Liikunta", callback_data = "liikunta_choice"),
+                    ]]
+                )
+            )               
+            print("\Starter completed, moving on to callback\n")
         self.close()
 
 
@@ -53,23 +54,25 @@ class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
         self.stringTreeParser = StringTreeParser()
 
     def on_callback_query(self, msg):
-        query_id, form_id, query_data = telepot.glance(msg, flavor = "callback_query")
+        query_id, from_id, query_data = telepot.glance(msg, flavor = "callback_query")
+        user = from_id
 
-        print("\non_callback_query()\n")
-        print(msg)
+        if query_data != "aloita":     #maybe useless
+            print("\non_callback_query()\n")
+            #print(msg)
 
-        next_msg = self.stringTreeParser.goForward(query_data)
+            next_msg = self.stringTreeParser.goForward(query_data, user)
 
-        reply_markup = None
-        if "buttons" in next_msg and next_msg["buttons"] is not None:
-            inline_keyboard = []
-            for btn in next_msg["buttons"]:
-                inline_keyboard.append(
-                        [InlineKeyboardButton(text = btn[0], callback_data = btn[1])]
-                )
-            reply_markup = InlineKeyboardMarkup(inline_keyboard = inline_keyboard)
+            reply_markup = None
+            if "buttons" in next_msg and next_msg["buttons"] is not None:
+                inline_keyboard = []
+                for btn in next_msg["buttons"]:
+                    inline_keyboard.append(
+                            [InlineKeyboardButton(text = btn[0], callback_data = btn[1])]
+                    )
+                reply_markup = InlineKeyboardMarkup(inline_keyboard = inline_keyboard)
 
-        self.editor.editMessageText(next_msg["msg"], reply_markup = reply_markup)
+            self.editor.editMessageText(next_msg["msg"], reply_markup = reply_markup)
 
 
 bot = telepot.DelegatorBot(BOT_TOKEN, [

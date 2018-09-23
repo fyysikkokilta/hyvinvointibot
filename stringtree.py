@@ -6,18 +6,28 @@ STRING_TREE = {
     "errorMessage" : "Paina nappia.",                                   #TODO: korjaa
     "children" : {
         "liikunta_choice" : {
+            "branch" : "liikunta",
             "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
+            "buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
             "errorMessage" : "Laita oikea numero intensiteetiksi.",     #TODO: korjaa
-            "child" : {
-                "msg" : "Kuinka kauan liikunta kesti tunteina?",
-                "errorMessage" : "Laita oikea numero kestoon.",         #TODO: korjaa
-                "child" : {
-                    "msg" : "Hieno homma, jatka samaan malliin!"        #TODO: korjaa
+            "children" : {
+                "liikunta_choice1" : {
+                    "branch" : "liikunta",
+                    "msg" : "Kuinka kauan liikunta kesti tunteina?",
+                    "buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
+                    "errorMessage" : "Laita oikea numero kestoon.",         #TODO: korjaa
+                    "children" : {
+                        "liikunta_choice2" : {
+                            "msg" : "Hieno homma, jatka samaan malliin!"        #TODO: korjaa
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+db = {}
 
 def verifyTree(tree, verbose = False):
     """
@@ -51,32 +61,44 @@ class StringTreeParser():
         self.root = STRING_TREE
         self.current_message = STRING_TREE
         self.message_chain = []
-        verifyTree(self.root)
+        #verifyTree(self.root)
 
-    def goForward(self, message_str):
+    def goForward(self, message_str, user):
         ret = None
 
         try:
-            button_id = message_str
+            button_id = float(message_str)
+            print(button_id)
+        #     if button_id <= 5:
+            if 0 < button_id <= 5:
+                if (self.current_message["branch"] == "liikunta"):
+                    #db.update({user, button_id})                #TODO: add to db 
+                    print("\npoints added\n")
+                childName = list(self.current_message["children"].keys())[0]       #TODO: fix this spaghetti
+                print(childName)
+                ret = self.current_message["children"][childName]
+                
 
-            if button_id == RETURN_BUTTON_ID:
-                #TODO
+        except ValueError:
+        
+            try:
+                button_id = message_str
+                print("button_id:" + button_id)
+
+
+                if button_id == RETURN_BUTTON_ID:
+                    #TODO
+                    pass
+
+                else:
+                    child = self.current_message["children"][button_id]
+
+                ret = child
+
+                #buttons = current_message["buttons"].filter(lambda x: x[1] == button_id)
+            except ValueError:
                 pass
-
-            child = self.current_message["children"][button_id]
-
-            ret = child
-
-            #buttons = current_message["buttons"].filter(lambda x: x[1] == button_id)
-        except ValueError:
-            pass
         #was not a button, check for number
-        try:
-            number = float(message_str)
-
-
-        except ValueError:
-            pass
         #was not a number, return error message
 
         if (ret == None):
