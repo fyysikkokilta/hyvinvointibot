@@ -11,7 +11,7 @@ from telepot.delegate import (
     per_chat_id, per_callback_query_origin, create_open, pave_event_space)
 
 
-BOT_TOKEN = "546681733:AAFRjJKFkmKBfsxfZnqnJcLpCllPX554lyU"         #currently @stikubot
+#BOT_TOKEN = "546681733:AAFRjJKFkmKBfsxfZnqnJcLpCllPX554lyU"         #currently @stikubot
 BOT_TIMEOUT = 5 * 60 # 5 minutes
 
 """
@@ -75,16 +75,37 @@ class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
             self.editor.editMessageText(next_msg["msg"], reply_markup = reply_markup)
 
 
-bot = telepot.DelegatorBot(BOT_TOKEN, [
-    pave_event_space()(
-        per_chat_id(), create_open, HyvinvointiChatStarter, timeout=BOT_TIMEOUT
-    ),
-    pave_event_space()(
-        per_callback_query_origin(), create_open, HyvinvointiChat, timeout=BOT_TIMEOUT
-    )
-])
-MessageLoop(bot).run_as_thread()
-print('Listening ...')
+def main():
+    bot = telepot.DelegatorBot(BOT_TOKEN, [
+        pave_event_space()(
+            per_chat_id(), create_open, HyvinvointiChatStarter, timeout=BOT_TIMEOUT
+        ),
+        pave_event_space()(
+            per_callback_query_origin(), create_open, HyvinvointiChat, timeout=BOT_TIMEOUT
+        )
+    ])
+    MessageLoop(bot).run_as_thread()
+    print('Listening ...')
 
-while 1:
-    time.sleep(10)
+    while 1:
+        time.sleep(10)
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) > 1:
+        BOT_TOKEN = sys.argv[1]
+    else:
+        try:
+            with open("token.txt", "r") as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        BOT_TOKEN = line.strip()
+                        break
+
+        except FileNotFoundError:
+            print("bot token not found. please provide it as a command-line argument or in a file 'token.txt'. exiting.")
+            sys.exit()
+
+    main()
