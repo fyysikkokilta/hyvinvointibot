@@ -88,21 +88,21 @@ def main():
         time.sleep(10)
 
 if __name__ == "__main__":
-  import sys
+    import sys
 
-  if len(sys.argv) > 1:
-    BOT_TOKEN = sys.argv[1]
-  else:
-    try:
-      with open("token.txt", "r") as f:
-        for line in f.readlines():
-          line = line.strip()
-          if line and not line.startswith("#"):
-            BOT_TOKEN = line.strip()
-            break
+    if len(sys.argv) > 1:
+        BOT_TOKEN = sys.argv[1]
+    else:
+        try:
+            with open("token.txt", "r") as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        BOT_TOKEN = line.strip()
+                        break
 
-    except FileNotFoundError:
-      print("bot token not found. please provide it as a command-line argument or in a file 'token.txt'. exiting.")
-      sys.exit()
+        except FileNotFoundError:
+            print("bot token not found. please provide it as a command-line argument or in a file 'token.txt'. exiting.")
+            sys.exit()
 
-  main()
+    main()
