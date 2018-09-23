@@ -82,7 +82,7 @@ class StringTreeParser():
         if (ret == None):
             ret = {"msg" : "Tapahtui virhe. Hienosti."}
 
-        ret.setdefault("buttons", None)
+        #ret.setdefault("buttons", None)
 
         self.message_chain.append(ret)
         self.current_message = ret
