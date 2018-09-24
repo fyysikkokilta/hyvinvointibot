@@ -116,3 +116,7 @@ class StringTreeParser():
             self.current_message = self.message_chain.pop()
         else:
             raise NotImplementedError
+
+    def reset(self):
+        self.current_message = self.root
+        self.message_chain = []
