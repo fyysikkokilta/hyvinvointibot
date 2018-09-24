@@ -44,9 +44,8 @@ class HyvinvointiChatStarter(telepot.helper.ChatHandler):
                     ]]
                 )
             )               
-            print("\Starter completed, moving on to callback\n")
+            print("\nStarter completed, moving on to callback\n")
         self.close()
-
 
 class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
     def __init__(self, *args, **kwargs):
