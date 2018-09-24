@@ -2,19 +2,21 @@ RETURN_BUTTON_ID = "return_choice"
 
 STRING_TREE = {
     "msg" : "Mitä olet tehnyt tänään?",
-    "buttons" : [["Liikunta", "liikunta_choice"]], #["Alkoholi", "alkoholi_choice"]], #TODO
+    #"buttons" : [["Liikunta", "liikunta_choice"]], #["Alkoholi", "alkoholi_choice"]], #TODO
+    "buttons" : ["Liikunta"], #["Alkoholi", "alkoholi_choice"]], #TODO
     "errorMessage" : "Paina nappia.",                                   #TODO: korjaa
     "children" : {
-        "liikunta_choice" : {
+        #"liikunta_choice" : {
+        "Liikunta" : {
             "branch" : "liikunta",
             "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
-            "buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
+            #"buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
             "errorMessage" : "Laita oikea numero intensiteetiksi.",     #TODO: korjaa
             "children" : {
                 "liikunta_choice1" : {
                     "branch" : "liikunta",
                     "msg" : "Kuinka kauan liikunta kesti tunteina?",
-                    "buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
+                    #"buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
                     "errorMessage" : "Laita oikea numero kestoon.",         #TODO: korjaa
                     "children" : {
                         "liikunta_choice2" : {
@@ -24,7 +26,8 @@ STRING_TREE = {
                 }
             }
         }
-    }
+    },
+    "root": True
 }
 
 db = {}
@@ -68,22 +71,23 @@ class StringTreeParser():
 
         try:
             button_id = float(message_str)
-            print(button_id)
+            print("button_id (float): {}".format(button_id))
         #     if button_id <= 5:
             if 0 < button_id <= 5:
                 if (self.current_message["branch"] == "liikunta"):
                     #db.update({user, button_id})                #TODO: add to db 
                     print("\npoints added\n")
                 childName = list(self.current_message["children"].keys())[0]       #TODO: fix this spaghetti
-                print(childName)
+                print("childName: {}".format(childName))
                 ret = self.current_message["children"][childName]
                 
 
-        except ValueError:
+        except ValueError as e:
+            print("ValueError when trying to get children based on number: {}".format(e))
         
             try:
                 button_id = message_str
-                print("button_id:" + button_id)
+                print("button_id: " + button_id)
 
 
                 if button_id == RETURN_BUTTON_ID:
@@ -91,12 +95,15 @@ class StringTreeParser():
                     pass
 
                 else:
-                    child = self.current_message["children"][button_id]
+                    #child = self.current_message["children"][button_id]
+                    assert len(self.current_message["children"]) <= 1
+                    child = list(self.current_message["children"].values())[0]
 
                 ret = child
 
                 #buttons = current_message["buttons"].filter(lambda x: x[1] == button_id)
-            except ValueError:
+            except ValueError as e:
+                print("ValueError when trying to get children based on button: {}".format(e))
                 pass
         #was not a button, check for number
         #was not a number, return error message
@@ -120,3 +127,6 @@ class StringTreeParser():
     def reset(self):
         self.current_message = self.root
         self.message_chain = []
+
+    def is_at_root(self):
+        return self.current_message == self.root
