@@ -2,6 +2,7 @@
 
 import sys
 import time
+from pprint import pprint
 import telepot
 from telepot.loop import MessageLoop
 from telepot.delegate import per_chat_id, create_open, pave_event_space
@@ -33,7 +34,7 @@ class HyvinvointiChatStarter(telepot.helper.ChatHandler):
         content_type, chat_type, chat_id = telepot.glance(msg)
 
         print("\non_chat_message()\n")
-        print(msg)
+        pprint(msg)
 
         if msg["text"] == "aloita":
             self.sender.sendMessage(
@@ -58,7 +59,7 @@ class HyvinvointiChat(telepot.helper.CallbackQueryOriginHandler):
 
         if query_data != "aloita":     #maybe useless
             print("\non_callback_query()\n")
-            #print(msg)
+            pprint(msg)
 
             next_msg = self.stringTreeParser.goForward(query_data, user)
 
@@ -84,7 +85,7 @@ def main():
         )
     ])
     MessageLoop(bot).run_as_thread()
-    print('Listening ...')
+    print('Listening @{} ...'.format(bot.getMe()["username"]))
 
     while 1:
         time.sleep(10)
