@@ -1,3 +1,6 @@
+import types
+import scoring
+
 RETURN_BUTTON_ID = "return_choice"
 
 STRING_TREE = {
@@ -20,12 +23,15 @@ STRING_TREE = {
                     "errorMessage" : "Laita oikea numero kestoon.",         #TODO: korjaa
                     "children" : {
                         "liikunta_choice2" : {
-                            "msg" : "Hieno homma, jatka samaan malliin!"        #TODO: korjaa
+                            "msg" : "Hieno homma, jatka samaan malliin!",        #TODO: korjaa
+                            "score_func": scoring.liikunta_score
                         }
                     }
                 }
             }
-        }
+        },
+        #TODO
+        #"Alkoholi" :
     },
     "root": True
 }
@@ -47,6 +53,9 @@ def verifyTree(tree, verbose = False):
             assert buttonId.endswith("_choice"), "{}, {}".format(button, buttonId)
             assert buttonId in tree["children"], "no choice found for {} in {} ({})".format(buttonId, tree["msg"], tree)
 
+    if "score_func" in tree:
+      assert type(tree["score_func"]) == types.FunctionType
+
     if "children" in tree:
         for childName, child in tree["children"].items():
             verifyTree(child, verbose)
@@ -57,6 +66,7 @@ def verifyTree(tree, verbose = False):
     else:
         if verbose:
             print("verifyTree(): found leaf node: {}".format(tree))
+        assert "score_func" in tree, "no score function found for leaf {}".format(tree) #TODO: might not be necessary, e.g. for help etc...
 
 
 class StringTreeParser():

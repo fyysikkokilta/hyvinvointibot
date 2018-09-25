@@ -40,6 +40,9 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             #self.sender.sendMessage
 
         else:
+            #TODO: check that we're in the middle of a conversation
+            #if not self.stringTreeParser.is_at_root(): return # or something
+
             try:
                 user = chat_id # this is fine since we're not in a group chat
                 next_msg = self.stringTreeParser.goForward(msg["text"], user)
