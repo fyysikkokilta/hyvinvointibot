@@ -49,6 +49,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         command = None
         reply_markup = ReplyKeyboardRemove()
         reply_message_str = None
+        end_conversation = False
         if txt.startswith("/"):
             # possibly a command, strip '@username' from the end
             command = txt.split("@")[0]
@@ -62,55 +63,10 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             self.stringTreeParser.reset()
             txt = command
 
-            #try:
-            #    next_message = self.stringTreeParser.goForward(command)
-            #    reply_message_str = next_message["msg"]
-            #    if "children" in next_message:
-            #        buttons = list(next_message["children"].keys())
-            #        reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
-
-
-            ##if command == "/lisaa":
-            ##    self.stringTreeParser.reset()
-            ##    root_msg = self.stringTreeParser.current_message
-            ##    reply_message_str = root_msg["msg"]
-            ##    # the root always has buttons
-            ##    buttons = list(root_msg["children"].keys())
-            ##    print("buttons: {}".format(buttons))
-            ##    reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
-
-            ##    #print("NOT IMPLEMENTED: /lisaa")
-            ##    #return # ?
-
-            ##elif command == "/lisaamonta":
-            ##    #TODO
-            ##    print("NOT IMPLEMENTED: /lisaaMonta")
-            ##    return # ?
-
-            ##elif command == "/help":
-            ##    #TODO
-            ##    print("NOT IMPLEMENTED: /help")
-            ##    return # ?
-
-            ##else:
-            #except InvalidMessageError:
-            #    # was an invalid command
-            #    self.sender.sendMessage(INVALID_COMMAND_MESSAGE, reply_markup = reply_markup)
-            #    return
-
-        # not a command, try to continue conversation
-        #elif not self.stringTreeParser.is_at_root():
-
-        #    #if txt == RETURN_BUTTON_MESSAGE:
-        #    #    ???
-        #    print("would attempt to continue conversation")
-        #    return
-
         elif self.stringTreeParser.is_at_root():
             # conversation was not started (?) but not a command
             self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE)
             return
-        
 
         # attempt to continue conversation
         try:
@@ -118,12 +74,13 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             reply_message_str = next_message["msg"]
 
             if "children" in next_message:
-                buttons = list(next_message["children"].keys())
+                buttons = next_message["children"].keys()
+                buttons = list(map(lambda b: b.capitalize(), buttons))
                 reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
 
             elif "child" not in next_message:
                 # is a leaf, stop conversation
-                #self.close() # TODO: correct?
+                end_conversation = True
                 pass
 
         except InvalidMessageError:
@@ -137,6 +94,9 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                     reply_markup = reply_markup)
         else:
             print("reply_message_str was empty, not sure what happened") #TODO: does this ever happen?
+
+        if end_conversation:
+            self.close()
 
 
         #bot_username =
