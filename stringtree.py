@@ -29,28 +29,19 @@ STRING_TREE = {
     "children": {
         "/lisaa": {
             "msg" : "Mitä olet tehnyt tänään?",
-            #"buttons" : [["Liikunta", "liikunta_choice"]], #["Alkoholi", "alkoholi_choice"]], #TODO
-            #"buttons" : ["Liikunta"], #["Alkoholi", "alkoholi_choice"]], #TODO
             "errorMessage" : "Paina nappia.",                                   #TODO: korjaa
             "children" : {
-                #"liikunta_choice" : {
                 "liikunta" : {
-                    #"branch" : "liikunta",
                     "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
-                    #"buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
-                    "errorMessage" : "Laita oikea numero intensiteetiksi.",     #TODO: korjaa
-                    "children" : {
-                        "liikunta_choice1" : {
-                            #"branch" : "liikunta",
-                            "msg" : "Kuinka kauan liikunta kesti tunteina?",
-                            #"buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
-                            "errorMessage" : "Laita oikea numero kestoon.",         #TODO: korjaa
-                            "children" : {
-                                "liikunta_choice2" : {
-                                    "msg" : "Hieno homma, jatka samaan malliin!",        #TODO: korjaa
-                                    "score_func": scoring.liikunta_score
-                                }
-                            }
+                    "errorMessage" : "Laita vastaukseksi numero välillä 0-5.", #TODO: add 'lopeta kirjoittamalla lopeta' tms
+                    "validation_func": scoring.liikunta_validate_intensity,
+                    "child" : {
+                        "msg" : "Kuinka kauan liikunta kesti tunteina?",
+                        "errorMessage" : "Laita oikea tuntimäärä kestoon.",
+                        "validation_func": scoring.liikunta_validate_duration,
+                        "child" : {
+                            "msg" : "Hieno homma, jatka samaan malliin!",        #TODO: korjaa
+                            "score_func": scoring.liikunta_score
                         }
                     }
                 },
@@ -80,15 +71,10 @@ def verifyTree(tree, verbose = False):
     recursively traverse a tree and check that each node has certain attributes
     """
 
-    assert "msg" in tree, tree
-    #assert "errorMessage" in tree # needed?
-
-    #if "buttons" in tree:
-    #    assert "children" in tree, "node with buttons but no children: {}".format(tree)
-    #    buttons = tree["buttons"]
-    #    for button, buttonId in buttons:
-    #        assert buttonId.endswith("_choice"), "{}, {}".format(button, buttonId)
-    #        assert buttonId in tree["children"], "no choice found for {} in {} ({})".format(buttonId, tree["msg"], tree)
+    if tree != STRING_TREE:
+        # every other node than the root should have 'msg'
+        assert "msg" in tree, tree
+    #assert "errorMessage" in tree, tree # needed? -- TODO: this is needed only for nodes with children, move it accordingly.
 
     if "score_func" in tree:
       assert type(tree["score_func"]) == types.FunctionType
@@ -98,12 +84,13 @@ def verifyTree(tree, verbose = False):
             verifyTree(child, verbose)
 
     elif "child" in tree:
+        assert "validation_func" in tree
         verifyTree(tree["child"], verbose)
 
     else:
         if verbose:
             print("verifyTree(): found leaf node: {}".format(tree))
-        assert "score_func" in tree, "no score function found for leaf {}".format(tree) #TODO: might not be necessary, e.g. for help etc...
+        #assert "score_func" in tree, "no score function found for leaf {}".format(tree) #TODO: might not be necessary, e.g. for help etc...
 
 
 # throw this error if a message is invalid in a given context
@@ -115,7 +102,7 @@ class StringTreeParser():
         self.root = STRING_TREE
         self.current_message = STRING_TREE
         self.message_chain = []
-        #verifyTree(self.root)
+        verifyTree(self.root)
 
     def goForward(self, message_str): #, user): #TODO
         """
@@ -126,18 +113,26 @@ class StringTreeParser():
         """
         ret = None
 
-        if "children" in self.current_message:
-            children = self.current_message["children"]
+        cm = self.current_message
+        if "children" in cm:
+            children = cm["children"]
 
             if message_str not in children:
                 print(message_str)
                 raise InvalidMessageError("invalid button") #TODO: should include errorMessage here?
             else:
-                self.message_chain.append(self.current_message)
+                self.message_chain.append(cm)
                 self.current_message = children[message_str]
                 return self.current_message
 
-        else: return {"msg" : "lors"}
+        elif "child" in cm:
+            # validate message
+            if cm["validation_func"](message_str):
+                self.message_chain.append(cm)
+                self.current_message = cm["child"]
+                return self.current_message
+            else:
+                raise InvalidMessageError("invalid value")
 
         #try:
         #    button_id = float(message_str)
