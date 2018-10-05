@@ -10,6 +10,7 @@ from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from stringtree import STRING_TREE, StringTreeParser
 from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
 from stringtree import INVALID_COMMAND_MESSAGE
+from stringtree import InvalidMessageError
 
 # globals, might be defined in functions
 BOT_TIMEOUT = 5 * 60 # 5 minutes
@@ -46,33 +47,96 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         # we're in a private chat
         command = None
+        reply_markup = ReplyKeyboardRemove()
+        reply_message_str = None
         if txt.startswith("/"):
             # possibly a command, strip '@username' from the end
             command = txt.split("@")[0]
 
         if command:
-            if command == "/lisaa":
-                self.stringTreeParser.reset()
-                print("NOT IMPLEMENTED: /lisaa")
-                return # ?
-            elif command == "/lisaamonta":
-                print("NOT IMPLEMENTED: /lisaaMonta")
-                return # ?
-            else:
-                # was a command but an invalid command
-                self.sender.sendMessage(INVALID_COMMAND_MESSAGE)
+            if command == "/lisaamonta":
+                #TODO: special case
+                print("NOT IMPLEMENTED: /lisaamonta")
                 return
 
+            self.stringTreeParser.reset()
+            txt = command
+
+            #try:
+            #    next_message = self.stringTreeParser.goForward(command)
+            #    reply_message_str = next_message["msg"]
+            #    if "children" in next_message:
+            #        buttons = list(next_message["children"].keys())
+            #        reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
+
+
+            ##if command == "/lisaa":
+            ##    self.stringTreeParser.reset()
+            ##    root_msg = self.stringTreeParser.current_message
+            ##    reply_message_str = root_msg["msg"]
+            ##    # the root always has buttons
+            ##    buttons = list(root_msg["children"].keys())
+            ##    print("buttons: {}".format(buttons))
+            ##    reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
+
+            ##    #print("NOT IMPLEMENTED: /lisaa")
+            ##    #return # ?
+
+            ##elif command == "/lisaamonta":
+            ##    #TODO
+            ##    print("NOT IMPLEMENTED: /lisaaMonta")
+            ##    return # ?
+
+            ##elif command == "/help":
+            ##    #TODO
+            ##    print("NOT IMPLEMENTED: /help")
+            ##    return # ?
+
+            ##else:
+            #except InvalidMessageError:
+            #    # was an invalid command
+            #    self.sender.sendMessage(INVALID_COMMAND_MESSAGE, reply_markup = reply_markup)
+            #    return
+
         # not a command, try to continue conversation
-        if not self.stringTreeParser.is_at_root():
+        #elif not self.stringTreeParser.is_at_root():
 
-            print("would continue conversation")
-            return
+        #    #if txt == RETURN_BUTTON_MESSAGE:
+        #    #    ???
+        #    print("would attempt to continue conversation")
+        #    return
 
-        else:
+        elif self.stringTreeParser.is_at_root():
+            # conversation was not started (?) but not a command
             self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE)
             return
+        
 
+        # attempt to continue conversation
+        try:
+            next_message = self.stringTreeParser.goForward(txt)
+            reply_message_str = next_message["msg"]
+
+            if "children" in next_message:
+                buttons = list(next_message["children"].keys())
+                reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
+
+            elif "child" not in next_message:
+                # is a leaf, stop conversation
+                #self.close() # TODO: correct?
+                pass
+
+        except InvalidMessageError:
+            # should not throw an error
+            reply_message_str = self.stringTreeParser.current_message["errorMessage"]
+
+
+        if reply_message_str:
+            self.sender.sendMessage(
+                    reply_message_str,
+                    reply_markup = reply_markup)
+        else:
+            print("reply_message_str was empty, not sure what happened") #TODO: does this ever happen?
 
 
         #bot_username =
