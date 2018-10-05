@@ -1,5 +1,6 @@
 import types
 import scoring
+from collections import OrderedDict
 
 RETURN_BUTTON_ID = "return_choice"
 
@@ -17,12 +18,15 @@ Furthermore, each non-leaf node should have the attributes
     OR
     child AND validation_func - in this case, the user is expected to input
         free-form data, such as a number. this data should be validated using
-        the function validation_func, which should return True or False.
+        the function validation_func, which should return either the validated
+        value (such as a number extracted from a string) or None.
 
 If a node has neither of the above, it is assumed to be a leaf node, and the
 conversation is terminated after it. A leaf node may have a key-value pair
 score_func, which evaluates the score of a given conversation chain.
 """
+
+BUTTONS_ERROR_MSG = "Valitse yksi annetuista vaihtoehdoista."
 
 STRING_TREE = {
     # root has no 'msg' (good idea?)
@@ -30,7 +34,7 @@ STRING_TREE = {
     "children": {
         "/lisaa": {
             "msg" : "Mitä olet tehnyt tänään?",
-            "errorMessage" : "Valitse yksi annetuista vaihtoehdoista",                                   #TODO: korjaa
+            "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : {
                 "liikunta" : {
                     "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
@@ -47,11 +51,45 @@ STRING_TREE = {
                     }
                 },
                 #TODO
-                #"Alkoholi" :
+                "alkoholi" : {
+                    #TODO: change this
+                    "msg": """
+                    Kuinka rankasti tuli otettua?
+
+Voit tulkita tasoja esim. seuraavasti:
+No blast - "Ehkä otin, ehkä en"
+Medium blast - "Kun otan, niin juon"
+Full blast - itsestäänselvää
+Bläkäri - "Vain bläkkisvuohi muistaa"
+                    """,
+                    "errorMessage": BUTTONS_ERROR_MSG,
+                    "children": OrderedDict([
+                        ("ei ollenkaan", {
+                            "msg": "Hienoa!" # TODO
+                        }),
+                        #TODO: capitalization?
+                        ("no blast", {
+                            "msg": "Selvä homma.", #TODO
+                            "score_func": lambda x: scoring.alkoholi_score(-1),
+                        }),
+                        ("medium blast", {
+                            "msg": "Hienosti.", #TODO
+                            "score_func": lambda x: scoring.alkoholi_score(-2),
+                        }),
+                        ("full blast", {
+                            "msg": "Hienosti.", #TODO
+                            "score_func": lambda x: scoring.alkoholi_score(-3),
+                        }),
+                        ("bläkäri", {
+                            "msg": "Hienosti.", #TODO
+                            "score_func": lambda x: scoring.alkoholi_score(-4),
+                        }),
+                     ]),
+                }
             },
         },
         "/help": {
-            "msg": "help-komento on vielä kesken lörs"
+            "msg": "help-komento on vielä toteuttamatta lörs", #TODO
         },
         #TODO: /lisaaMonta is a special case, handle it...
     },
@@ -62,9 +100,6 @@ STRING_TREE = {
 
 GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
 DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
-
-
-db = {}
 
 def verifyTree(tree, verbose = False):
     """
@@ -109,81 +144,44 @@ class StringTreeParser():
         Attempt to advance the conversation based on message_str. If the
         message is invalid, raise ValueError so the caller can send the
         errorMessage of the current message.
-        Returns the subtree dict of the rest of the conversation.
+        Returns a pair (next_msg, validated_value), where next_msg is the
+        subtree dict of the rest of the conversation and validated_value is the
+        validated value of message_str (such as a number), if applicable, or
+        None.
         """
-        ret = None
+        next_msg = None
+        validated_value = None
 
         node = self.current_message
         if "children" in node:
             children = node["children"]
 
             if message_str not in children:
+                #TODO: back button etc
+                #if message_str in [RETURN_BUTTON_MESSAGE, RETURN_MESSAGE]: self.reset(); return self.nextMessage #TODO: not good idea to reset here without notifying caller...
                 raise InvalidMessageError("invalid button") #TODO: should include errorMessage here?
             else:
                 self.message_chain.append(node)
                 self.current_message = children[message_str]
-                return self.current_message #TODO: move this to 'ret'?
+                #return self.current_message #TODO: move this to 'ret'?
+                next_msg = self.current_message
 
         elif "child" in node:
             # validate message
-            if not node["validation_func"](message_str):
+            validated_value = node["validation_func"](message_str)
+            if validated_value is None:
                 raise InvalidMessageError("invalid value")
             else:
                 self.message_chain.append(node)
                 self.current_message = node["child"]
-                return self.current_message
+                #return self.current_message
+                next_msg = self.current_message
 
         # was leaf, don't do anything? is it good that the caller handles no children?
         if "score_func" in node:
             print("TODO: score_func found, what do???") #TODO - or should be done by callee?
 
-
-        #try:
-        #    button_id = float(message_str)
-        #    print("button_id (float): {}".format(button_id))
-        ##     if button_id <= 5:
-        #    if 0 < button_id <= 5:
-        #        if (self.current_message["branch"] == "liikunta"):
-        #            #db.update({user, button_id})                #TODO: add to db 
-        #            print("\npoints added\n")
-        #        childName = list(self.current_message["children"].keys())[0]       #TODO: fix this spaghetti
-        #        print("childName: {}".format(childName))
-        #        ret = self.current_message["children"][childName]
-
-
-        #except ValueError as e:
-        #    print("ValueError when trying to get children based on number: {}".format(e))
-
-        #    try:
-        #        button_id = message_str
-        #        print("button_id: " + button_id)
-
-
-        #        if button_id == RETURN_BUTTON_ID:
-        #            #TODO
-        #            pass
-
-        #        else:
-        #            #child = self.current_message["children"][button_id]
-        #            assert len(self.current_message["children"]) <= 1
-        #            child = list(self.current_message["children"].values())[0]
-
-        #        ret = child
-
-        #        #buttons = current_message["buttons"].filter(lambda x: x[1] == button_id)
-        #    except ValueError as e:
-        #        print("ValueError when trying to get children based on button: {}".format(e))
-        #        pass
-        ##was not a button, check for number
-        ##was not a number, return error message
-
-        #if (ret == None):
-        #    ret = {"msg" : "Tapahtui virhe. Hienosti."}
-
-        ##ret.setdefault("buttons", None)
-
-        #self.message_chain.append(ret)
-        #self.current_message = ret
+        return (next_msg, validated_value)
 
         return ret
 

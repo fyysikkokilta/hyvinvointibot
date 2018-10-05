@@ -16,10 +16,15 @@ BOT_TIMEOUT = 5 * 60 # 5 minutes
 BOT_TOKEN = None
 BOT_USERNAME = None
 
+# TODO: replace with real database
+from collections import defaultdict
+db = defaultdict(lambda: {"good": 0, "bad": 0}) #TODO: replace magic strings with string constants
+
 class HyvinvointiChat(telepot.helper.ChatHandler):
     def __init__(self, *args, **kwargs):
         super(HyvinvointiChat, self).__init__(*args, **kwargs)
         self.stringTreeParser = StringTreeParser()
+        self.current_score_parameters = []
 
     def on_chat_message(self, msg):
 
@@ -62,28 +67,43 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
             # otherwise, treat the command as a regular message and proceed
             self.stringTreeParser.reset()
+            self.current_score_parameters = []
             txt = command
 
         elif self.stringTreeParser.is_at_root():
             # conversation has not been started but the message is not a command
             # TODO: kind of hacky / inconsistent, should maybe use goForward regularly instead?
-            self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE)
+            self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE, reply_markup = ReplyKeyboardRemove())
             return
 
         # attempt to continue conversation
         try:
-            next_message = self.stringTreeParser.goForward(txt)
+            next_message, validated_value = self.stringTreeParser.goForward(txt)
+
+            if validated_value is not None:
+                self.current_score_parameters.append(validated_value)
+
             reply_message_str = next_message["msg"]
 
             if "children" in next_message:
                 buttons = next_message["children"].keys()
                 buttons = list(map(lambda b: b.capitalize(), buttons))
-                reply_markup = ReplyKeyboardMarkup(keyboard = [buttons])
+                max_row_length = 3
+                buttons_reshaped = []
+                for i in range(0, len(buttons), max_row_length):
+                    buttons_reshaped.append(buttons[i:i+max_row_length])
+
+                pprint(buttons_reshaped)
+                reply_markup = ReplyKeyboardMarkup(keyboard = buttons_reshaped)
 
             elif "child" not in next_message:
                 # is a leaf, stop conversation
                 end_conversation = True
-                pass
+                # evaluate score
+                if "score_func" in next_message:
+                    score_obj = next_message["score_func"](self.current_score_parameters)
+                    db[chat_id][score_obj.type] += score_obj.value
+                    pprint(db)
 
         except InvalidMessageError:
             # message was invalid
@@ -114,6 +134,8 @@ def main():
     ])
 
     BOT_USERNAME = bot.getMe()["username"].lower()
+
+    #TODO: flush messages
 
     MessageLoop(bot).run_as_thread()
     print('Listening @{} ...'.format(bot.getMe()["username"]))
