@@ -55,16 +55,19 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             command = txt.split("@")[0]
 
         if command:
+            # first, handle special commands
             if command == "/lisaamonta":
                 #TODO: special case
                 print("NOT IMPLEMENTED: /lisaamonta")
                 return
 
+            # otherwise, treat the command as a message and proceed
             self.stringTreeParser.reset()
             txt = command
 
         elif self.stringTreeParser.is_at_root():
-            # conversation was not started (?) but not a command
+            # conversation has not been started but the message is not a command
+            # TODO: kind of hacky / inconsistent, should maybe use goForward regularly instead?
             self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE)
             return
 
@@ -84,7 +87,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 pass
 
         except InvalidMessageError:
-            # should not throw an error
+            # current_message["errorMessage"] should not throw an error if the tree is valid
             reply_message_str = self.stringTreeParser.current_message["errorMessage"]
 
 

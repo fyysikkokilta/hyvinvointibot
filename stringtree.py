@@ -34,7 +34,7 @@ STRING_TREE = {
             "errorMessage" : "Paina nappia.",                                   #TODO: korjaa
             "children" : {
                 #"liikunta_choice" : {
-                "Liikunta" : {
+                "liikunta" : {
                     #"branch" : "liikunta",
                     "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
                     #"buttons" : [["1", "1"], ["2", "3"], ["3", "3"]],
@@ -130,6 +130,7 @@ class StringTreeParser():
             children = self.current_message["children"]
 
             if message_str not in children:
+                print(message_str)
                 raise InvalidMessageError("invalid button") #TODO: should include errorMessage here?
             else:
                 self.message_chain.append(self.current_message)
