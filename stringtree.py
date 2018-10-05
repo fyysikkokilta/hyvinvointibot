@@ -29,7 +29,7 @@ STRING_TREE = {
     "children": {
         "/lisaa": {
             "msg" : "Mitä olet tehnyt tänään?",
-            "errorMessage" : "Paina nappia.",                                   #TODO: korjaa
+            "errorMessage" : "Valitse yksi annetuista vaihtoehdoista",                                   #TODO: korjaa
             "children" : {
                 "liikunta" : {
                     "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
@@ -61,7 +61,6 @@ STRING_TREE = {
 
 GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
 DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
-INVALID_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
 
 
 db = {}
@@ -93,7 +92,7 @@ def verifyTree(tree, verbose = False):
         #assert "score_func" in tree, "no score function found for leaf {}".format(tree) #TODO: might not be necessary, e.g. for help etc...
 
 
-# throw this error if a message is invalid in a given context
+# this error is thrown if a message is invalid in a given context
 class InvalidMessageError(Exception): pass
 
 
@@ -113,26 +112,30 @@ class StringTreeParser():
         """
         ret = None
 
-        cm = self.current_message
-        if "children" in cm:
-            children = cm["children"]
+        node = self.current_message
+        if "children" in node:
+            children = node["children"]
 
             if message_str not in children:
-                print(message_str)
                 raise InvalidMessageError("invalid button") #TODO: should include errorMessage here?
             else:
-                self.message_chain.append(cm)
+                self.message_chain.append(node)
                 self.current_message = children[message_str]
+                return self.current_message #TODO: move this to 'ret'?
+
+        elif "child" in node:
+            # validate message
+            if not node["validation_func"](message_str):
+                raise InvalidMessageError("invalid value")
+            else:
+                self.message_chain.append(node)
+                self.current_message = node["child"]
                 return self.current_message
 
-        elif "child" in cm:
-            # validate message
-            if cm["validation_func"](message_str):
-                self.message_chain.append(cm)
-                self.current_message = cm["child"]
-                return self.current_message
-            else:
-                raise InvalidMessageError("invalid value")
+        # was leaf, don't do anything? is it good that the caller handles no children?
+        if "score_func" in node:
+            print("TODO: score_func found, what do???") #TODO - or should be done by callee?
+
 
         #try:
         #    button_id = float(message_str)

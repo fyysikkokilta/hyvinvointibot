@@ -9,7 +9,6 @@ from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from stringtree import STRING_TREE, StringTreeParser
 from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
-from stringtree import INVALID_COMMAND_MESSAGE
 from stringtree import InvalidMessageError
 
 # globals, might be defined in functions
@@ -61,7 +60,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 print("NOT IMPLEMENTED: /lisaamonta")
                 return
 
-            # otherwise, treat the command as a message and proceed
+            # otherwise, treat the command as a regular message and proceed
             self.stringTreeParser.reset()
             txt = command
 
@@ -87,8 +86,12 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 pass
 
         except InvalidMessageError:
+            # message was invalid
             # current_message["errorMessage"] should not throw an error if the tree is valid
-            reply_message_str = self.stringTreeParser.current_message["errorMessage"]
+            cm = self.stringTreeParser.current_message
+            reply_message_str = cm["errorMessage"]
+            # if there's buttons, don't remove them
+            if "children" in cm: reply_markup = None
 
 
         if reply_message_str:
@@ -100,59 +103,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         if end_conversation:
             self.close()
-
-
-        #bot_username =
-
-        #if chat_type != "private":
-        #    print("TODO: should send a reply along the lines of 'lisää tapahtumia yksityisviestillä', not implemented yet") #TODO
-        #    return
-
-        #reply = None
-        #reply_markup = None
-
-        #pprint(msg)
-
-        #if msg["text"] == "aloita":
-
-        #    # TODO: good idea to always reset on /start command? (probably yes)
-        #    self.stringTreeParser.reset()
-        #    cm = self.stringTreeParser.current_message
-        #    reply = cm["msg"]
-
-        #    # NOTE: assuming that the first choice always has buttons.
-        #    reply_markup = ReplyKeyboardMarkup(keyboard = [cm["buttons"]])
-
-        #    #self.sender.sendMessage
-
-        #else:
-        #    #TODO: check that we're in the middle of a conversation
-        #    #if not self.stringTreeParser.is_at_root(): return # or something
-
-        #    try:
-        #        user = chat_id # this is fine since we're not in a group chat
-        #        next_msg = self.stringTreeParser.goForward(msg["text"], user)
-        #        reply = next_msg["msg"]
-        #        if "buttons" in next_msg:
-        #            reply_markup = next_msg["buttons"]
-        #        else:
-        #            reply_markup = ReplyKeyboardRemove()
-        #        #TODO
-        #        #if not "children" in next_msg:
-        #        #    ... call self.close() after 
-
-
-        #    except ValueError:
-        #        #TODO: what should be done here?
-        #        #nest_msg = self.stringTreeParser.current_message["error_msg"] ???
-        #        pass
-
-
-        #if reply:
-        #    self.sender.sendMessage(reply, reply_markup = reply_markup)
-        #else:
-        #    print("not replying to")
-        #    pprint(msg)
 
 def main():
     global BOT_USERNAME
