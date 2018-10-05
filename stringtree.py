@@ -8,6 +8,7 @@ The STRING_TREE object contains all possible chains of discussion. It is a dict
 containing dicts. Each sub-dictionary corresponds to a message. Each dict
 should have the following key-value pairs:
     msg - the message the bot sends when at this point in the conversation
+        (the root node doesn't have this)
     errorMessage - a message that the bot should send when the reply wasn't
         sensible
 
@@ -24,7 +25,7 @@ score_func, which evaluates the score of a given conversation chain.
 """
 
 STRING_TREE = {
-    # root has no 'msg' (?)
+    # root has no 'msg' (good idea?)
     "errorMessage": "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help.",
     "children": {
         "/lisaa": {
