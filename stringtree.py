@@ -36,6 +36,11 @@ STRING_TREE = {
     "root": True
 }
 
+GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
+DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
+INVALID_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
+
+
 db = {}
 
 def verifyTree(tree, verbose = False):
