@@ -12,6 +12,8 @@ from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
 from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
 from stringtree import HELP_MESSAGE
 
+from scoring import GOOD_KEY, BAD_KEY
+
 # globals, might be defined in functions
 BOT_TIMEOUT = 5 * 60 # 5 minutes
 BOT_TOKEN = None
@@ -19,7 +21,17 @@ BOT_USERNAME = None
 
 # TODO: replace with real database
 from collections import defaultdict
-db = defaultdict(lambda: {"good": 0, "bad": 0, "history": []}) #TODO: replace magic strings with string constants
+db = defaultdict(lambda: {GOOD_KEY: 0, BAD_KEY: 0, "history": [], "team": None}) #TODO: replace magic strings with string constants
+
+#TODO: here's a list of larger scale TODO's / goals
+"""
+TODO: database
+    - teams
+    - remove entries
+TODO: all conversation paths
+TODO: score functions
+TODO: back button to all 'button' conversations
+"""
 
 class HyvinvointiChat(telepot.helper.ChatHandler):
     def __init__(self, *args, **kwargs):
@@ -59,7 +71,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         reply_markup = ReplyKeyboardRemove()
         reply_message_str = None
         end_conversation = False
-        if txt.startswith("/"):
+        if txt.startswith("/"): #TODO: consider using telepot features, msg["entities"] has 'bot_command'
             # possibly a command, strip '@username' from the end
             command = txt.split("@")[0]
 
@@ -74,6 +86,9 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             elif command == "/lisaa":
                 self.adding_event = True
                 self.add_event_continue_conversation(msg, restart = True)
+
+            elif command == "/poista":
+                print("NOT IMPLEMENTED: /poista") #TODO
 
             elif command == "/help":
 
@@ -97,7 +112,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         else:
             # conversation has not been started but the message is not a command
             self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE, reply_markup = ReplyKeyboardRemove())
-            return
 
         if end_conversation:
             self.close()
@@ -142,8 +156,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
             if validated_value is not None:
                 self.current_score_parameters.append(validated_value)
+            elif not restart:
+                self.current_score_parameters.append(txt)
 
             if "children" in next_message:
+                #self.current_score_parameters.append(txt)
                 buttons = self.get_buttons(next_message["children"].keys())
                 pprint(buttons) #TODO: remove
                 reply_markup = ReplyKeyboardMarkup(keyboard = buttons)
@@ -157,6 +174,10 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 score_obj = next_message["score_func"](self.current_score_parameters)
 
                 db[uname][score_obj.type] += score_obj.value
+
+                score_params_with_date = self.current_score_parameters
+                score_params_with_date.append(time.time())
+                db[uname]["history"].append(score_params_with_date) #TODO
 
                 pprint(db) #TODO: remove
 

@@ -21,10 +21,10 @@ class ScoreObject():
 
 
 def liikunta_score(params):
-  # params = [intensity, duration]
+  # params = ['Liikunta', intensity, duration]
   assert type(params) == list
   print("liikunta_score(): {}".format(params))
-  score = params[0] * params[1] #TODO: replace this with something that is not linear in duration
+  score = params[1] * params[2] #TODO: replace this with something that is not linear in duration
 
   return ScoreObject(score, "good")
 
