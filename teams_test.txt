@@ -1,0 +1,7 @@
+# File containing teams. The format is:
+# team name; user1; user2; user3; user_n
+# where user_i are the telegram usernames of the team members (without @).
+# Empty rows and rows starting with '#' are ignored
+
+Tommi ja mä; martong; tommila
+Devauschätin muut jäbät; hupimestari; summanen
