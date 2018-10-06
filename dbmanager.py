@@ -2,6 +2,7 @@
 DBManager is a thin wrapper around PyMongo
 """
 
+import time
 from pymongo import MongoClient
 
 from scoring import GOOD_KEY, BAD_KEY
@@ -15,6 +16,8 @@ def parse_teams_and_add_to_db(filename):
     connection = MongoClient()
     db = connection[DATABASE_NAME]
     participants = db.participants
+
+    #participants.createIndex({"username": 1}, {"unique": True}) #TODO: test this ....
 
     with open(filename, "r") as f:
         for line in f.readlines():
@@ -54,10 +57,13 @@ class DBManager():
 
         try:
             score = score_obj.value
-            user_data[score_obj.type] += score
+            user_data[score_obj.type] += score #TODO: this is incorrect -- use update
             hist_plus_timestamp_and_value = score_obj.history
             hist_plus_timestamp_and_value.extend([score, time.time()])
             user_data[HISTORY_KEY].append(hist_plus_timestamp_and_value)
+
+            # ehh, this is probably pretty stupid to bounce the history list around between mem <-> db, but oh well...
+            self.participants.update_one({"username": username}, {"$set": user_data})
 
         except Exception as e:
             print("ERROR: DBManager.insert_score(): {}".format(e))
