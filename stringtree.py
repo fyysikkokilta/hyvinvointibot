@@ -47,6 +47,7 @@ STRING_TREE = {
     "msg": START_ADD_EVENT_MESSAGE,
     "errorMessage" : BUTTONS_ERROR_MSG,
     "children" : {
+        #TODO: change to OrderedDict?
         "liikunta" : {
             "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
             "errorMessage" : "Laita vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
@@ -70,7 +71,7 @@ STRING_TREE = {
 Voit tulkita tasoja esim. seuraavasti:
 No blast - "Ehkä otin, ehkä en"
 Medium blast - "Kun otan, niin juon"
-Full blast - itsestäänselvää
+Full blast - tiedät mitä tämä tarkoittaa
 Bläkäri - "Vain bläkkisvuohi muistaa"
             """,
             "errorMessage": BUTTONS_ERROR_MSG,
