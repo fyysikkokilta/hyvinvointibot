@@ -111,10 +111,13 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         elif self.adding_event:
             #TODO: check if the message was 'alkuun' etc
-            #TODO: is end_conversation = continue() correct here?
-            end_conversation = self.add_event_continue_conversation(msg)
-            if end_conversation:
-                self.adding_event = False
+            if txt in [RETURN_MESSAGE.lower(), RETURN_BUTTON_MESSAGE.lower()]:
+                self.add_event_continue_conversation(msg, restart = True)
+            else:
+                #TODO: is end_conversation = continue() correct here?
+                end_conversation = self.add_event_continue_conversation(msg)
+                if end_conversation:
+                    self.adding_event = False
 
         else:
             # conversation has not been started but the message is not a command

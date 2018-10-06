@@ -27,6 +27,7 @@ def parse_teams_and_add_to_db(filename):
             for uname in s[1:]:
                 participants.insert_one(
                     {
+                        #"_id": uname, #TODO: make 'username' a key, is this correct?
                         "team" : team_name,
                         "username" : uname,
                         GOOD_KEY : 0,
