@@ -124,6 +124,12 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         if end_conversation:
             self.close()
 
+def flush_messages(bot):
+    updates = bot.getUpdates()
+    while updates:
+        print("Flushing {} messages".format(len(updates)))
+        updates = bot.getUpdates(updates[-1]["update_id"] + 1)
+
 def main():
     global BOT_USERNAME
 
@@ -135,7 +141,7 @@ def main():
 
     BOT_USERNAME = bot.getMe()["username"].lower()
 
-    #TODO: flush messages
+    flush_messages(bot)
 
     MessageLoop(bot).run_as_thread()
     print('Listening @{} ...'.format(bot.getMe()["username"]))
