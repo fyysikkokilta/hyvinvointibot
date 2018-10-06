@@ -64,7 +64,12 @@ class DBManager():
 
 
     def get_history(self, username):
-        raise NotImplementedError
+        history = participants.find_one({"username" : username})
+        if history is None:
+            print("history is None")
+            return
+        
+        return history[HISTORY_KEY][-10:]
 
     def get_top_lists(self):
         """
