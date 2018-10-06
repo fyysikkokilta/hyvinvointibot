@@ -30,9 +30,10 @@ BOT_USERNAME = None
 TODO: database
     - teams
     - remove entries
+    - show rankings
 TODO: all conversation paths
 TODO: score functions
-TODO: back button to all 'button' conversations
+TODO: back button to all 'button' conversations ~ done
 TODO: add multiple things / add all things for today
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
@@ -68,6 +69,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                         reply_to_message_id = msg["message_id"]
                         )
             # don't do anything else in a group chat
+            #TODO: allow /rank command in group chat
             return
 
         # we're in a private chat
