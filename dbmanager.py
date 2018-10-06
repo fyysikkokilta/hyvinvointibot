@@ -48,11 +48,20 @@ class DBManager():
         """
         user_data = self.participants.find_one({"username": username})
         if user_data is None:
-            print("user_data is None")
-            #self.participants.insert_one( ... )
+            print("ERROR: DBManager.insert_score(): could not find user_data for {}\n".format(username))
             return
-        user_data[score_obj.type] += score_obj.value
-        user_data[HISTORY_KEY].append(score_obj.history)
+
+        try:
+            score = score_obj.value
+            user_data[score_obj.type] += score
+            hist_plus_timestamp_and_value = score_obj.history
+            hist_plus_timestamp_and_value.extend([score, time.time()])
+            user_data[HISTORY_KEY].append(hist_plus_timestamp_and_value)
+
+        except Exception as e:
+            print("ERROR: DBManager.insert_score(): {}".format(e))
+            return
+
 
     def get_history(self, username):
         raise NotImplementedError
@@ -67,3 +76,9 @@ class DBManager():
 
 
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("please provide the name of a text file for parsing as a command line argument.")
+        sys.exit()
+
+    parse_teams_and_add_to_db(sys.argv[1])

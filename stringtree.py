@@ -14,7 +14,8 @@ RETURN_BUTTON_ID = "return_choice"
 
 BUTTONS_ERROR_MSG = "Valitse yksi annetuista vaihtoehdoista."
 
-#RETURN_BUTTON_MESSAGE = "« Alkuun"
+RETURN_BUTTON_MESSAGE = "« Alkuun"
+RETURN_MESSAGE = "alkuun"
 GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
 DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
 UNKNOWN_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
@@ -58,7 +59,7 @@ STRING_TREE = {
                 "errorMessage" : "Laita oikea tuntimäärä kestoon.",
                 "validation_func": scoring.liikunta_validate_duration,
                 "child" : {
-                    "msg" : "Hieno homma, jatka samaan malliin!",        #TODO: korjaa
+                    "msg" : "Hieno homma, jatka samaan malliin!", #TODO: good?
                     "score_func": scoring.liikunta_score
                 }
             }
@@ -73,7 +74,7 @@ Voit tulkita tasoja esim. seuraavasti:
 No blast - "Ehkä otin, ehkä en"
 Medium blast - "Kun otan, niin juon"
 Full blast - tiedät mitä tämä tarkoittaa
-Bläkäri - "Vain bläkkisvuohi muistaa"
+Bläkäri - "Vain Bläkkisvuohi muistaa"
             """,
             "errorMessage": BUTTONS_ERROR_MSG,
             "children": OrderedDict([

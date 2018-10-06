@@ -1,8 +1,8 @@
 """
-This module contains functions for calculating scores for different types of activities.
-Each function takes a list as a parameter and computes the score based on that.
-The score is returned wrapped into a score object, which has a type "good" 
-(hyvinvointi) or "bad" (pahoinvoint) and a numeric value.
+This module contains functions for calculating scores for different types of
+activities. Each function takes a list as a parameter and computes the score
+based on that. The score is returned wrapped into a score object, which has a
+type "good" (hyvinvointi) or "bad" (pahoinvoint) and a numeric value.
 """
 
 GOOD_KEY = "good"
@@ -10,15 +10,15 @@ BAD_KEY = "bad"
 
 class ScoreObject():
 
-  def __init__(self, value, _type, params):
+  def __init__(self, value, _type, hist):
     """
-    params is the history based on which the value is calculated
+    hist is the history based on which the value has been calculated
     """
     assert _type in [GOOD_KEY, BAD_KEY]
     value = float(value)
     self.type = _type
     self.value = value
-    self.parameters = params
+    self.history = hist
 
   def __repr__(self):
     return "{}({})".format(self.__class__, self.__dict__)

@@ -10,9 +10,11 @@ from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from stringtree import StringTreeParser, InvalidMessageError
 from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
 from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
-from stringtree import HELP_MESSAGE
+from stringtree import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
+
+from dbmanager import DBManager
 
 # globals, might be defined in functions
 BOT_TIMEOUT = 5 * 60 # 5 minutes
@@ -20,8 +22,8 @@ BOT_TOKEN = None
 BOT_USERNAME = None
 
 # TODO: replace with real database
-from collections import defaultdict
-db = defaultdict(lambda: {GOOD_KEY: 0, BAD_KEY: 0, "history": [], "team": None}) #TODO: replace magic strings with string constants
+#from collections import defaultdict
+#db = defaultdict(lambda: {GOOD_KEY: 0, BAD_KEY: 0, "history": [], "team": None}) #TODO: replace magic strings with string constants
 
 #TODO: here's a list of larger scale TODO's / goals
 """
@@ -31,9 +33,12 @@ TODO: database
 TODO: all conversation paths
 TODO: score functions
 TODO: back button to all 'button' conversations
+TODO: add multiple things / add all things for today
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
 """
+
+dbm = DBManager()
 
 class HyvinvointiChat(telepot.helper.ChatHandler):
     def __init__(self, *args, **kwargs):
@@ -139,7 +144,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         end_conversation = False
 
         txt = msg["text"].strip().lower()
-        uname = msg["from"]["username"]
+        username = msg["from"]["username"]
 
         try:
             next_message = None
@@ -163,9 +168,12 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
             if "children" in next_message:
                 #self.current_score_parameters.append(txt)
-                buttons = self.get_buttons(next_message["children"].keys())
+                buttons = self.get_buttons(
+                        next_message["children"].keys(),
+                        add_return_button = not restart,
+                        )
                 pprint(buttons) #TODO: remove
-                reply_markup = ReplyKeyboardMarkup(keyboard = buttons)
+                reply_markup = ReplyKeyboardMarkup(keyboard = buttons, resize_keyboard = True)
 
             elif "child" not in next_message:
                 # we're at a leaf
@@ -177,13 +185,15 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 score_obj = next_message["score_func"](self.current_score_parameters)
                 pprint(score_obj)
 
-                db[uname][score_obj.type] += score_obj.value
+                #db[uname][score_obj.type] += score_obj.value
 
-                score_params_with_date = self.current_score_parameters
-                score_params_with_date.append(time.time())
-                db[uname]["history"].append(score_params_with_date) #TODO
+                #score_params_with_date = self.current_score_parameters
+                #score_params_with_date.append(time.time())
+                #db[uname]["history"].append(score_params_with_date) #TODO
 
-                pprint(db) #TODO: remove
+                #pprint(db) #TODO: remove
+
+                dbm.insert_score(username, score_obj)
 
         except InvalidMessageError:
             # message was invalid
@@ -203,13 +213,15 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         return end_conversation
 
 
-    def get_buttons(self, list_of_strs):
+    def get_buttons(self, list_of_strs, add_return_button = True):
         """
         Small helper function for reshaping a list of strings to a 2D array of
         strings with appropriate dimensions.
         """
-        max_row_length = 3
+        max_row_length = 2
         list_of_strs = list(map(lambda b: b.capitalize(), list_of_strs))
+        if add_return_button:
+            list_of_strs.append(RETURN_BUTTON_MESSAGE)
         buttons = []
         for i in range(0, len(list_of_strs), max_row_length):
             buttons.append(list_of_strs[i:i+max_row_length])
