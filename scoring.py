@@ -12,7 +12,7 @@ class ScoreObject():
 
   def __init__(self, value, _type, params):
     """
-    params: the parameters that were used to calculate value
+    params is the history based on which the value is calculated
     """
     assert _type in [GOOD_KEY, BAD_KEY]
     value = float(value)
@@ -24,17 +24,28 @@ class ScoreObject():
     return "{}({})".format(self.__class__, self.__dict__)
 
 
-def liikunta_score(params):
-  # params = ['Liikunta', intensity, duration]
-  assert type(params) == list
-  print("liikunta_score(): {}".format(params))
-  score = params[1] * params[2] #TODO: replace this with something that is not linear in duration
+def liikunta_score(history):
+  # history = ['Liikunta', intensity, duration]
+  assert type(history) == list
+  print("liikunta_score(): {}".format(history)) #TODO: remove
+  score = history[1] * history[2] #TODO: replace this with something that is not linear in duration
 
-  return ScoreObject(score, "good", params)
+  return ScoreObject(score, GOOD_KEY, history)
 
-def alkoholi_score(params):
-  # params: should just be a float
-  return ScoreObject(abs(params), "bad", params)
+def alkoholi_score(history):
+  # history is a list like e.g. ["alkoholi", "full blast"]
+  score_dict = {
+      "ei ollenkaan": 0,
+      "no blast": 1,
+      "medium blast": 2,
+      "full blast": 3,
+      "bläkäri": 4,
+      }
+
+  score = score_dict[history[-1]]
+
+  print("alkoholi_score(): {}".format(history))
+  return ScoreObject(score, BAD_KEY, history)
 
 
 ########################

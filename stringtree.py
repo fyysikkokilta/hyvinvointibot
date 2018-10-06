@@ -78,24 +78,24 @@ Bläkäri - "Vain bläkkisvuohi muistaa"
             "children": OrderedDict([
                 ("ei ollenkaan", {
                     "msg": "Hienoa!", # TODO
-                    "score_func": lambda x: scoring.alkoholi_score(0),
+                    "score_func": alkoholi_score,
                 }),
                 #TODO: capitalization?
                 ("no blast", {
                     "msg": "Selvä homma.", #TODO
-                    "score_func": lambda x: scoring.alkoholi_score(-1),
+                    "score_func": scoring.alkoholi_score,
                 }),
                 ("medium blast", {
                     "msg": "Hienosti.", #TODO
-                    "score_func": lambda x: scoring.alkoholi_score(-2),
+                    "score_func": scoring.alkoholi_score,
                 }),
                 ("full blast", {
                     "msg": "Hienosti.", #TODO
-                    "score_func": lambda x: scoring.alkoholi_score(-3),
+                    "score_func": scoring.alkoholi_score,
                 }),
                 ("bläkäri", {
                     "msg": "Hienosti.", #TODO
-                    "score_func": lambda x: scoring.alkoholi_score(-4),
+                    "score_func": scoring.alkoholi_score,
                 }),
              ]),
         }

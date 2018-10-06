@@ -31,6 +31,8 @@ TODO: database
 TODO: all conversation paths
 TODO: score functions
 TODO: back button to all 'button' conversations
+TODO: hottiksen tapahtumat???
+    - only possible to add them after the event?
 """
 
 class HyvinvointiChat(telepot.helper.ChatHandler):
@@ -170,8 +172,10 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 end_conversation = True
 
                 # all leaves should have a score function
-                pprint(self.current_score_parameters) #TODO: remove
+                #pprint(self.current_score_parameters) #TODO: remove
+                #TODO: add try-except? might throw an error if there are typos or anything
                 score_obj = next_message["score_func"](self.current_score_parameters)
+                pprint(score_obj)
 
                 db[uname][score_obj.type] += score_obj.value
 
