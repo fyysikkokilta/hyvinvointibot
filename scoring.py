@@ -5,10 +5,13 @@ The score is returned wrapped into a score object, which has a type "good"
 (hyvinvointi) or "bad" (pahoinvoint) and a numeric value.
 """
 
+GOOD_KEY = "good"
+BAD_KEY = "bad"
+
 class ScoreObject():
 
   def __init__(self, value, _type):
-    assert _type in ["good", "bad"]
+    assert _type in [GOOD_KEY, BAD_KEY]
     value = float(value)
     self.type = _type
     self.value = value
@@ -34,11 +37,11 @@ def alkoholi_score(params):
 # VALIDATION FUNCTIONS #
 ########################
 
-"""
-return float(number_str) if number_str is a number and is in the range [a, b],
-otherwise return None
-"""
 def validate_number(number_str, a, b):
+  """
+  return float(number_str) if number_str is a number and is in the range [a, b],
+  otherwise return None
+  """
   try:
     n = float(number_str)
     if a <= n <= b:

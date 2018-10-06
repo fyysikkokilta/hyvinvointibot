@@ -1,8 +1,24 @@
+"""
+This module contains all string and some helper functions related to messaging.
+"""
 import types
 import scoring
 from collections import OrderedDict
 
 RETURN_BUTTON_ID = "return_choice"
+
+#####################
+# MESSAGE CONSTANTS #
+#####################
+
+BUTTONS_ERROR_MSG = "Valitse yksi annetuista vaihtoehdoista."
+
+#RETURN_BUTTON_MESSAGE = "« Alkuun"
+GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
+DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
+UNKNOWN_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
+HELP_MESSAGE = "help-komento on vielä toteuttamatta lörs" #TODO
+START_ADD_EVENT_MESSAGE = "Mitä olet tehnyt tänään?"
 
 """
 The STRING_TREE object contains all possible chains of discussion. It is a dict
@@ -26,84 +42,70 @@ conversation is terminated after it. A leaf node may have a key-value pair
 score_func, which evaluates the score of a given conversation chain.
 """
 
-BUTTONS_ERROR_MSG = "Valitse yksi annetuista vaihtoehdoista."
-
 STRING_TREE = {
-    # root has no 'msg' (good idea?)
-    "errorMessage": "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help.",
-    "children": {
-        "/lisaa": {
-            "msg" : "Mitä olet tehnyt tänään?",
-            "errorMessage" : BUTTONS_ERROR_MSG,
-            "children" : {
-                "liikunta" : {
-                    "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
-                    "errorMessage" : "Laita vastaukseksi numero välillä 0-5.", #TODO: add 'lopeta kirjoittamalla lopeta' tms
-                    "validation_func": scoring.liikunta_validate_intensity,
-                    "child" : {
-                        "msg" : "Kuinka kauan liikunta kesti tunteina?",
-                        "errorMessage" : "Laita oikea tuntimäärä kestoon.",
-                        "validation_func": scoring.liikunta_validate_duration,
-                        "child" : {
-                            "msg" : "Hieno homma, jatka samaan malliin!",        #TODO: korjaa
-                            "score_func": scoring.liikunta_score
-                        }
-                    }
-                },
-                #TODO
-                "alkoholi" : {
-                    #TODO: change this
-                    "msg": """
-                    Kuinka rankasti tuli otettua?
+    #### root has no 'msg' (good idea?)
+    "msg": START_ADD_EVENT_MESSAGE,
+    "errorMessage" : BUTTONS_ERROR_MSG,
+    "children" : {
+        "liikunta" : {
+            "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
+            "errorMessage" : "Laita vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
+            "validation_func": scoring.liikunta_validate_intensity,
+            "child" : {
+                "msg" : "Kuinka kauan liikunta kesti tunteina?",
+                "errorMessage" : "Laita oikea tuntimäärä kestoon.",
+                "validation_func": scoring.liikunta_validate_duration,
+                "child" : {
+                    "msg" : "Hieno homma, jatka samaan malliin!",        #TODO: korjaa
+                    "score_func": scoring.liikunta_score
+                }
+            }
+        },
+        #TODO
+        "alkoholi" : {
+            #TODO: change this
+            "msg": """
+            Kuinka rankasti tuli otettua?
 
 Voit tulkita tasoja esim. seuraavasti:
 No blast - "Ehkä otin, ehkä en"
 Medium blast - "Kun otan, niin juon"
 Full blast - itsestäänselvää
 Bläkäri - "Vain bläkkisvuohi muistaa"
-                    """,
-                    "errorMessage": BUTTONS_ERROR_MSG,
-                    "children": OrderedDict([
-                        ("ei ollenkaan", {
-                            "msg": "Hienoa!" # TODO
-                        }),
-                        #TODO: capitalization?
-                        ("no blast", {
-                            "msg": "Selvä homma.", #TODO
-                            "score_func": lambda x: scoring.alkoholi_score(-1),
-                        }),
-                        ("medium blast", {
-                            "msg": "Hienosti.", #TODO
-                            "score_func": lambda x: scoring.alkoholi_score(-2),
-                        }),
-                        ("full blast", {
-                            "msg": "Hienosti.", #TODO
-                            "score_func": lambda x: scoring.alkoholi_score(-3),
-                        }),
-                        ("bläkäri", {
-                            "msg": "Hienosti.", #TODO
-                            "score_func": lambda x: scoring.alkoholi_score(-4),
-                        }),
-                     ]),
-                }
-            },
-        },
-        "/help": {
-            "msg": "help-komento on vielä toteuttamatta lörs", #TODO
-        },
-        #TODO: /lisaaMonta is a special case, handle it...
+            """,
+            "errorMessage": BUTTONS_ERROR_MSG,
+            "children": OrderedDict([
+                ("ei ollenkaan", {
+                    "msg": "Hienoa!", # TODO
+                    "score_func": lambda x: scoring.alkoholi_score(0),
+                }),
+                #TODO: capitalization?
+                ("no blast", {
+                    "msg": "Selvä homma.", #TODO
+                    "score_func": lambda x: scoring.alkoholi_score(-1),
+                }),
+                ("medium blast", {
+                    "msg": "Hienosti.", #TODO
+                    "score_func": lambda x: scoring.alkoholi_score(-2),
+                }),
+                ("full blast", {
+                    "msg": "Hienosti.", #TODO
+                    "score_func": lambda x: scoring.alkoholi_score(-3),
+                }),
+                ("bläkäri", {
+                    "msg": "Hienosti.", #TODO
+                    "score_func": lambda x: scoring.alkoholi_score(-4),
+                }),
+             ]),
+        }
     },
+    #TODO: /lisaaMonta is a special case, handle it...
     "root": True
 }
 
-#RETURN_BUTTON_MESSAGE = "« Alkuun"
-
-GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
-DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
-
 def verifyTree(tree, verbose = False):
     """
-    recursively traverse a tree and check that each node has certain attributes
+    recursively traverse the message tree and check that each node has certain attributes
     """
 
     if tree != STRING_TREE:
@@ -125,8 +127,9 @@ def verifyTree(tree, verbose = False):
     else:
         if verbose:
             print("verifyTree(): found leaf node: {}".format(tree))
-        #assert "score_func" in tree, "no score function found for leaf {}".format(tree) #TODO: might not be necessary, e.g. for help etc...
+        assert "score_func" in tree, "no score function found for leaf {}".format(tree)
 
+verifyTree(STRING_TREE)
 
 # this error is thrown if a message is invalid in a given context
 class InvalidMessageError(Exception): pass
@@ -137,19 +140,18 @@ class StringTreeParser():
         self.root = STRING_TREE
         self.current_message = STRING_TREE
         self.message_chain = []
-        verifyTree(self.root)
 
     def goForward(self, message_str): #, user): #TODO
         """
         Attempt to advance the conversation based on message_str. If the
         message is invalid, raise ValueError so the caller can send the
         errorMessage of the current message.
-        Returns a pair (next_msg, validated_value), where next_msg is the
-        subtree dict of the rest of the conversation and validated_value is the
-        validated value of message_str (such as a number), if applicable, or
-        None.
+        Returns a pair (next_message, validated_value), where next_message is
+        the subtree dict of the rest of the conversation and validated_value is
+        the validated value of message_str (such as a number), if applicable,
+        or None.
         """
-        next_msg = None
+        next_message = None
         validated_value = None
 
         node = self.current_message
@@ -164,7 +166,7 @@ class StringTreeParser():
                 self.message_chain.append(node)
                 self.current_message = children[message_str]
                 #return self.current_message #TODO: move this to 'ret'?
-                next_msg = self.current_message
+                next_message = self.current_message
 
         elif "child" in node:
             # validate message
@@ -175,13 +177,13 @@ class StringTreeParser():
                 self.message_chain.append(node)
                 self.current_message = node["child"]
                 #return self.current_message
-                next_msg = self.current_message
+                next_message = self.current_message
 
         # was leaf, don't do anything? is it good that the caller handles no children?
         if "score_func" in node:
             print("TODO: score_func found, what do???") #TODO - or should be done by callee?
 
-        return (next_msg, validated_value)
+        return (next_message, validated_value)
 
         return ret
 
