@@ -2,8 +2,9 @@
 This module contains all string and some helper functions related to messaging.
 """
 import types
-import scoring
 from collections import OrderedDict
+import scoring
+from scoring import GOOD_KEY, BAD_KEY, ScoreObject
 
 RETURN_BUTTON_ID = "return_choice"
 
@@ -78,24 +79,24 @@ Bläkäri - "Vain bläkkisvuohi muistaa"
             "children": OrderedDict([
                 ("ei ollenkaan", {
                     "msg": "Hienoa!", # TODO
-                    "score_func": alkoholi_score,
+                    "score_func": lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
                 #TODO: capitalization?
                 ("no blast", {
                     "msg": "Selvä homma.", #TODO
-                    "score_func": scoring.alkoholi_score,
+                    "score_func": lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
                 ("medium blast", {
                     "msg": "Hienosti.", #TODO
-                    "score_func": scoring.alkoholi_score,
+                    "score_func": lambda h: ScoreObject(2, BAD_KEY, h),
                 }),
                 ("full blast", {
                     "msg": "Hienosti.", #TODO
-                    "score_func": scoring.alkoholi_score,
+                    "score_func": lambda h: ScoreObject(3, BAD_KEY, h),
                 }),
                 ("bläkäri", {
                     "msg": "Hienosti.", #TODO
-                    "score_func": scoring.alkoholi_score,
+                    "score_func": lambda h: ScoreObject(4, BAD_KEY, h),
                 }),
              ]),
         }

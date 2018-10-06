@@ -32,22 +32,6 @@ def liikunta_score(history):
 
   return ScoreObject(score, GOOD_KEY, history)
 
-def alkoholi_score(history):
-  # history is a list like e.g. ["alkoholi", "full blast"]
-  score_dict = {
-      "ei ollenkaan": 0,
-      "no blast": 1,
-      "medium blast": 2,
-      "full blast": 3,
-      "bläkäri": 4,
-      }
-
-  score = score_dict[history[-1]]
-
-  print("alkoholi_score(): {}".format(history))
-  return ScoreObject(score, BAD_KEY, history)
-
-
 ########################
 # VALIDATION FUNCTIONS #
 ########################
