@@ -99,7 +99,87 @@ Bläkäri - "Vain bläkkisvuohi muistaa"
                     "score_func": lambda h: ScoreObject(4, BAD_KEY, h),
                 }),
              ]),
-        }
+        },
+        "ruoka" : {
+            "msg" : "Miten hyvin söit tänään?",
+            "errorMessage" : BUTTONS_ERROR_MSG,
+            "children" : OrderedDict([
+                ("panostin tänään",  {
+                    "msg" : "Hienoa.",          #TODO
+                    "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
+                }),
+                ("normipäivä", {
+                    "msg" : "Hienosti.",        #TODO
+                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                }),
+                ("huonosti", {
+                    "msg" : "Hienosti.",        #TODO
+                    "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
+                }),
+            ]),
+        },
+        "vapaa-aika" : {
+            "msg" : "Kuinka paljon vietit vapaa-aikaa tänään?",
+            "errorMessage" : BUTTONS_ERROR_MSG,
+            "children" : OrderedDict([
+                ("runsaasti", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(2, GOOD_KEY, h),
+                }),
+                ("sopivasti", {
+                    "msg" : "Hienosti",         #TODO
+                    "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
+                }),
+                ("vähän", {
+                    "msg" : "Hienosti",         #TODO
+                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                }),
+                ("ei riittävästi", {
+                    "msg" : "Hienosti",          #TODO
+                    "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
+                }),
+            ]),
+        },
+        "stressi" : {
+            "msg" : "Kuinka stressaantunut olet ollut tänään?",
+            "errorMessage" : BUTTONS_ERROR_MSG,
+            "children" : OrderedDict([
+                ("paljon", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(-2, BAD_KEY, h),
+                }),
+                ("vähän", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(-1, BAD_KEY, h),
+                }),
+                ("ei lainkaan", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                }),
+            ]),
+        },
+        "uni" : {
+            "msg" : "Miten hyvin nukuit tänään?",
+            "errorMessage" : BUTTONS_ERROR_MSG,
+            "children" : OrderedDict([
+                ("tosi hyvin", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(2, GOOD_KEY, h),
+                }),
+                ("riittävästi", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
+                }),
+                ("huonosti", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(-1, BAD_KEY, h,)
+                }),
+                ("heräsin darrassa", {
+                    "msg" : "Hienosti.",
+                    "score_func" : lambda h: ScoreObject(-2, BAD_KEY, h),
+                }),
+            ]),
+        },
     },
     #TODO: /lisaaMonta is a special case, handle it...
     "root": True
