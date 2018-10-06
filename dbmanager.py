@@ -12,6 +12,9 @@ HISTORY_KEY = "history"
 def parse_teams_and_add_to_db(filename):
     #TODO
     # read teams from a text file and store them in the dict 'db'
+    connection = MongoClient()
+    db = connection[DATABASE_NAME]
+    participants = db.participants
 
     with open(filename, "r") as f:
         for line in f.readlines():
@@ -22,7 +25,16 @@ def parse_teams_and_add_to_db(filename):
             s = list(map(lambda p: p.strip(), line.split(";")))
             team_name = s[0]
             for uname in s[1:]:
-                ??? #TODO
+                participants.insert_one(
+                    {
+                        "team" : team_name,
+                        "username" : uname,
+                        GOOD_KEY : 0,
+                        BAD_KEY : 0,
+                        HISTORY_KEY : [],
+                    },
+                )
+                
 
 class DBManager():
     def __init__(self):
