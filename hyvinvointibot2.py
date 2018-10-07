@@ -38,6 +38,7 @@ TODO: score functions
 TODO: back button to all 'button' conversations ~ done
 TODO: /lisaapaiva
 TODO: prevent duplicates of the event for the same day
+TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot
 TODO: /aboutme (?): show info about me (team, username, history, team members?)
     - team info (show members for a given team)
 TODO: hottiksen tapahtumat???
@@ -118,7 +119,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             #txt = command
 
         elif self.adding_event:
-            #TODO: check if the message was 'alkuun' etc
             if txt in [RETURN_MESSAGE.lower(), RETURN_BUTTON_MESSAGE.lower()]:
                 self.add_event_continue_conversation(msg, restart = True)
             else:

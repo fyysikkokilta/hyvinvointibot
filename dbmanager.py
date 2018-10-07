@@ -92,18 +92,31 @@ class DBManager():
 
 
     def get_history(self, username):
-        history = participants.find_one({USERNAME_KEY : username})
-        if history is None:
-            print("ERROR: DBManager.get_history(): history is None for {}".format(username))
+        user_data = self.participants.find_one({USERNAME_KEY : username})
+        if user_data is None:
+            print("ERROR: DBManager.get_history(): user_data is None for {}".format(username))
             return
 
-        return history[HISTORY_KEY][-10:]
+        return user_data[HISTORY_KEY] #[-10:] # list is trimmed by callee
 
-    def get_top_lists(self):
+    def get_todays_history(self, username):
+        history = self.get_history(username)
+        return list(filter(lambda x: is_today(x[-1]), history))
+
+    def remove_nth_newest_event_today(self, username, n):
+        #user_data = self.participants.find_one({USERNAME_KEY : username})
+        #if user_data is None:
+        #    print("ERROR: DBManager.remove_nth_newest_event(): user_data is None for {}".format(username))
+        #    return
+
+        hist = self.get_todays_history(username)
+
+    def get_top_lists(self, count):
         """
-        Return the list of the top 10 (?) most good and most bad teams, sorted
+        Return the list of the top `count` most good and most bad teams, sorted
         according to their score
         """
+        #TODO: do index calculation here?
 
         raise NotImplementedError
 
@@ -116,6 +129,20 @@ class DBManager():
 
         return c >= 1
 
+    def has_done_today(self, username, category):
+        """
+        Check if the given user has added an event with the given category
+        (such as 'liikunta' or 'alkoholi') already today.
+        """
+        #TODO: call this function somewhere
+        username = username.lower()
+        category = category.lower()
+
+        history = self.get_history(username)
+        # x[0] should always be the category and x[-1] the timestamp
+        filter_func = lambda x: x[0] == category and is_today(x[-1])
+
+        return bool(list(filter(filter_func, history)))
 
 
 if __name__ == "__main__":
