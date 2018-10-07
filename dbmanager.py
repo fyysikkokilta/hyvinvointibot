@@ -4,6 +4,7 @@ DBManager is a thin wrapper around PyMongo
 
 import time
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 from scoring import GOOD_KEY, BAD_KEY
 
@@ -11,15 +12,18 @@ DATABASE_NAME = "hyvinvointi-2018-test" #TODO: remove -test
 HISTORY_KEY = "history"
 
 def parse_teams_and_add_to_db(filename):
-    #TODO
-    # read teams from a text file and store them in the dict 'db'
+    # read teams from a text file and store them in the database
     connection = MongoClient()
     db = connection[DATABASE_NAME]
     participants = db.participants
 
-    #participants.createIndex({"username": 1}, {"unique": True}) #TODO: test this ....
+    # assure that each username gets added only once
+    # if the index already exists, this doesn't do anything
+    participants.create_index("username", unique = True)
 
     with open(filename, "r") as f:
+        print("Adding participants to database {}".format(DATABASE_NAME))
+        team_names = []
         for line in f.readlines():
             line = line.strip()
             if line and line.startswith("#"):
@@ -27,18 +31,27 @@ def parse_teams_and_add_to_db(filename):
 
             s = list(map(lambda p: p.strip(), line.split(";")))
             team_name = s[0]
-            for uname in s[1:]:
-                participants.insert_one(
-                    {
-                        #"_id": uname, #TODO: make 'username' a key, is this correct?
-                        "team" : team_name,
-                        "username" : uname,
-                        GOOD_KEY : 0,
-                        BAD_KEY : 0,
-                        HISTORY_KEY : [],
-                    },
-                )
-                
+            assert team_name not in team_names, "Error: duplicate team name: {}".format(team_name)
+            team_names.append(team_name)
+            for username in s[1:]:
+                username = username.lower()
+                if not username: continue # filter out empty strings if there was a ; at the end
+                try:
+                    # pretty hacky to use try-except here...
+                    result = participants.insert_one(
+                            {
+                                "team" : team_name,
+                                "username" : username,
+                                GOOD_KEY : 0,
+                                BAD_KEY : 0,
+                                HISTORY_KEY : [],
+                                },
+                            )
+                    print("added: {} - {}".format(team_name, username))
+
+                except DuplicateKeyError:
+                    print("already exists: {} - {}".format(team_name, username))
+
 
 class DBManager():
     def __init__(self):
@@ -48,8 +61,9 @@ class DBManager():
 
     def insert_score(self, username, score_obj):
         """
-        Add the information of the score objec to the user
+        Add the information of the score object to the user
         """
+        username = username.lower()
         user_data = self.participants.find_one({"username": username})
         if user_data is None:
             print("ERROR: DBManager.insert_score(): could not find user_data for {}\n".format(username))
@@ -75,7 +89,7 @@ class DBManager():
         if history is None:
             print("history is None")
             return
-        
+
         return history[HISTORY_KEY][-10:]
 
     def get_top_lists(self):
