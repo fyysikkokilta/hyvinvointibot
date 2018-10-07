@@ -21,9 +21,20 @@ DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennois
 UNKNOWN_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
 START_ADD_EVENT_MESSAGE = "Mihin kategoriaan haluat lisätä pisteitä?"
 NOT_PARTICIPANT_MESSAGE = "Et ole minkään ilmoittautuneen joukkueen jäsen. Jos haluat vielä mukaan kilpailuun, ole yhteydessä käyttäjään @martong."
+
+USER_HISTORY_MESSAGE = """
+Viimeisimmät lisäämäsi tapahtumat:
+
+{}"""
+USER_HISTORY_COUNT_PROMPT = "\n\nPoista tapahtuma antamalla sen numero."
+NO_USER_HISTORY_MESSAGE = "Et ole lisännyt tänään vielä yhtään tapahtumaa."
+USER_HISTORY_COUNT_ERROR_MESSAGE = "Anna kokonaisluku välillä 1-{}"
+ITEM_REMOVED_SUCCESS_MESSAGE = "Tapahtuma poistettiin onnistuneesti."
+
+
 HELP_MESSAGE = """Hyvinvointibotin avulla voit syöttää pisteitä itsellesi ja joukkueellesi Hottiksen hyvinvointikilpailussa. Syöttääksesi pisteitä sinun pitää olla kilpailuun ilmoittautuneen joukkueen jäsen. Jos haluat osallistua kilpailuun jälkikäteen, ota yhteyttä käyttäjään @martong.
 
-Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stressi ja uni. Jokaiseen kategoriaan voi lisätä kerran päivässä pisteitä. Eri vastauksista voit saada joko hyvinvointi-, tai pahoinvointipisteitä. Komennolla /lisaa voit lisätä yhteen kategoriaan pisteitä. Komennolla /lisaapaiva voit lisätä päivän pisteet kaikkiin kategorioihin.
+Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stressi ja uni. Jokaiseen kategoriaan voi lisätä kerran päivässä pisteitä. Eri vastauksista voit saada joko hyvinvointi-, tai pahoinvointipisteitä. Komennolla /lisaa voit lisätä yhteen kategoriaan pisteitä. Komennolla /lisaapaiva voit lisätä päivän pisteet kaikkiin kategorioihin. Komennolla /poista voit poistaa saman päivänä lisäämiäsi pisteitä.
 
 
 Komennot

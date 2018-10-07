@@ -11,6 +11,9 @@ from stringtree import StringTreeParser, InvalidMessageError
 from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
 from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
 from stringtree import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
+from stringtree import USER_HISTORY_MESSAGE, NO_USER_HISTORY_MESSAGE
+from stringtree import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_MESSAGE
+from stringtree import USER_HISTORY_COUNT_PROMPT
 from stringtree import NOT_PARTICIPANT_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
@@ -50,12 +53,19 @@ TODO: BOT_ADMIN constant
 
 dbm = DBManager()
 
+# pretty spaghetti way of keeping track of what we're doing
+STATE_ADDING_EVENT = "adding event"
+STATE_ADDING_MANY_EVENTS = "adding many events"
+STATE_REMOVING_EVENT = "removing event"
+STATE_NONE = "none"
+
 class HyvinvointiChat(telepot.helper.ChatHandler):
     def __init__(self, *args, **kwargs):
         super(HyvinvointiChat, self).__init__(*args, **kwargs)
         self.stringTreeParser = StringTreeParser()
         self.current_score_parameters = []
-        self.adding_event = False
+        #self.adding_event = False
+        self.state = STATE_NONE
 
     def on_chat_message(self, msg):
 
@@ -98,18 +108,22 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         if command:
 
-            self.adding_event = False # TODO: good idea?
+            #self.adding_event = False # TODO: good idea?
+            self.state = STATE_NONE
 
             if command == "/lisaamonta":
                 print("NOT IMPLEMENTED: /lisaamonta")
                 #self.adding_many_events = True #TODO
+                #self.state = STATE_ADDING_MANY_EVENTS
                 return
             elif command == "/lisaa":
-                self.adding_event = True
+                #self.adding_event = True
+                self.state = STATE_ADDING_EVENT
                 self.add_event_continue_conversation(msg, restart = True)
 
             elif command == "/poista":
-                print("NOT IMPLEMENTED: /poista") #TODO
+                self.state = STATE_REMOVING_EVENT
+                end_conversation = self.remove_item_continue_conversation(msg, 0)
 
             elif command == "/help":
 
@@ -118,25 +132,26 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             else:
                 self.sender.sendMessage(UNKNOWN_COMMAND_MESSAGE)
 
-            ## otherwise, treat the command as a regular message and proceed
-            #self.stringTreeParser.reset()
-            #self.current_score_parameters = []
-            #txt = command
-
-        elif self.adding_event:
+        #elif self.adding_event:
+        elif self.state == STATE_ADDING_EVENT:
             if txt in [RETURN_MESSAGE.lower(), RETURN_BUTTON_MESSAGE.lower()]:
                 self.add_event_continue_conversation(msg, restart = True)
             else:
                 #TODO: is end_conversation = continue() correct here?
                 end_conversation = self.add_event_continue_conversation(msg)
                 if end_conversation:
-                    self.adding_event = False
+                    #self.adding_event = False
+                    self.state = STATE_NONE
+
+        elif self.state == STATE_REMOVING_EVENT:
+            end_conversation = self.remove_item_continue_conversation(msg, 1)
 
         else:
             # conversation has not been started but the message is not a command
             self.sender.sendMessage(DID_NOT_UNDERSTAND_MESSAGE, reply_markup = ReplyKeyboardRemove())
 
         if end_conversation:
+            self.state = STATE_NONE
             self.close()
 
 
@@ -243,6 +258,59 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             buttons.append(list_of_strs[i:i+max_row_length])
 
         return buttons
+
+    def format_user_history(self, hist):
+        """
+        return the given list of history entries as a nicely formatted string
+        """
+        hist.sort(key = lambda x: -x["timestamp"]) # sort from new to old
+        hist_with_indices = [] #TODO
+        for i, entry in enumerate(hist):
+            s = str(i + 1) + " - "
+            s += entry["category"].capitalize() + " - "
+            s += ", ".join([str(p).capitalize() for p in entry["params"]])
+            hist_with_indices.append(s)
+
+        hist_str = "\n".join(hist_with_indices)
+        return hist_str
+
+    def remove_item_continue_conversation(self, msg, stage = 0):
+        username = msg["from"]["username"]
+
+        txt = msg["text"].lower()
+
+        hist = dbm.get_todays_history(username)
+        if not hist:
+            self.sender.sendMessage(NO_USER_HISTORY_MESSAGE,
+                    reply_markup = ReplyKeyboardRemove())
+            return True # end conversation
+
+        if stage == 0:
+
+            hist_str = self.format_user_history(hist)
+            reply_str = USER_HISTORY_MESSAGE.format(hist_str)
+            reply_str += USER_HISTORY_COUNT_PROMPT
+            self.sender.sendMessage(reply_str,
+                    reply_markup = ReplyKeyboardRemove())
+
+            return False
+
+        else:
+            try:
+                n = int(txt)
+                if n > len(hist) or n <= 0:
+                    raise ValueError
+
+                dbm.remove_nth_newest_event_today(username, n)
+                self.sender.sendMessage(ITEM_REMOVED_SUCCESS_MESSAGE)
+                return True
+
+            except ValueError:
+                self.sender.sendMessage(
+                        USER_HISTORY_COUNT_ERROR_MESSAGE.format(len(hist)))
+
+                return False
+
 
 def flush_messages(bot):
     updates = bot.getUpdates()
