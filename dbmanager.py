@@ -4,22 +4,28 @@ DBManager is a thin wrapper around PyMongo
 
 import time
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 from scoring import GOOD_KEY, BAD_KEY
 
 DATABASE_NAME = "hyvinvointi-2018-test" #TODO: remove -test
 HISTORY_KEY = "history"
+USERNAME_KEY = "username"
+TEAM_KEY = "team"
 
 def parse_teams_and_add_to_db(filename):
-    #TODO
-    # read teams from a text file and store them in the dict 'db'
+    # read teams from a text file and store them in the database
     connection = MongoClient()
     db = connection[DATABASE_NAME]
     participants = db.participants
 
-    #participants.createIndex({"username": 1}, {"unique": True}) #TODO: test this ....
+    # assure that each username gets added only once
+    # if the index already exists, this doesn't do anything
+    participants.create_index(USERNAME_KEY, unique = True)
 
     with open(filename, "r") as f:
+        print("Adding participants to database {}".format(DATABASE_NAME))
+        team_names = []
         for line in f.readlines():
             line = line.strip()
             if line and line.startswith("#"):
@@ -27,18 +33,27 @@ def parse_teams_and_add_to_db(filename):
 
             s = list(map(lambda p: p.strip(), line.split(";")))
             team_name = s[0]
-            for uname in s[1:]:
-                participants.insert_one(
-                    {
-                        #"_id": uname, #TODO: make 'username' a key, is this correct?
-                        "team" : team_name,
-                        "username" : uname,
-                        GOOD_KEY : 0,
-                        BAD_KEY : 0,
-                        HISTORY_KEY : [],
-                    },
-                )
-                
+            assert team_name not in team_names, "Error: duplicate team name: {}".format(team_name)
+            team_names.append(team_name)
+            for username in s[1:]:
+                username = username.lower()
+                if not username: continue # filter out empty strings if there was a ; at the end
+                try:
+                    # pretty hacky to use try-except here...
+                    result = participants.insert_one(
+                            {
+                                TEAM_KEY : team_name,
+                                USERNAME_KEY : username,
+                                GOOD_KEY : 0,
+                                BAD_KEY : 0,
+                                HISTORY_KEY : [],
+                                },
+                            )
+                    print("added: {} - {}".format(team_name, username))
+
+                except DuplicateKeyError:
+                    print("already exists: {} - {}".format(team_name, username))
+
 
 class DBManager():
     def __init__(self):
@@ -48,9 +63,10 @@ class DBManager():
 
     def insert_score(self, username, score_obj):
         """
-        Add the information of the score objec to the user
+        Add the information of the score object to the user
         """
-        user_data = self.participants.find_one({"username": username})
+        username = username.lower()
+        user_data = self.participants.find_one({USERNAME_KEY : username})
         if user_data is None:
             print("ERROR: DBManager.insert_score(): could not find user_data for {}\n".format(username))
             return
@@ -63,7 +79,7 @@ class DBManager():
             user_data[HISTORY_KEY].append(hist_plus_timestamp_and_value)
 
             # ehh, this is probably pretty stupid to bounce the history list around between mem <-> db, but oh well...
-            self.participants.update_one({"username": username}, {"$set": user_data})
+            self.participants.update_one({USERNAME_KEY : username}, {"$set": user_data})
 
         except Exception as e:
             print("ERROR: DBManager.insert_score(): {}".format(e))
@@ -71,11 +87,11 @@ class DBManager():
 
 
     def get_history(self, username):
-        history = participants.find_one({"username" : username})
+        history = participants.find_one({USERNAME_KEY : username})
         if history is None:
-            print("history is None")
+            print("ERROR: DBManager.get_history(): history is None for {}".format(username))
             return
-        
+
         return history[HISTORY_KEY][-10:]
 
     def get_top_lists(self):
@@ -85,6 +101,16 @@ class DBManager():
         """
 
         raise NotImplementedError
+
+    def is_participant(self, username):
+        username = username.lower()
+        c = self.participants.count_documents({USERNAME_KEY : username})
+
+        if c > 1:
+            print("DBManager.is_participant(): found {} entries for {}".format(c, username))
+
+        return c >= 1
+
 
 
 if __name__ == "__main__":

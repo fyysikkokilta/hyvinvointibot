@@ -28,15 +28,21 @@ BOT_USERNAME = None
 #TODO: here's a list of larger scale TODO's / goals
 """
 TODO: database
-    - teams
+    x teams ~~ done
     - remove entries
     - show rankings
+        - score index: divide by first position x 100
+        - show pahoinvointi in reverse order(?)
 TODO: all conversation paths
 TODO: score functions
 TODO: back button to all 'button' conversations ~ done
-TODO: add multiple things / add all things for today
+TODO: /lisaapaiva
+TODO: prevent duplicates of the event for the same day
+TODO: /aboutme (?): show info about me (team, username, history, team members?)
+    - team info (show members for a given team)
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
+TODO: /info command - "/info alkoholi" - show info about alcohol
 """
 
 dbm = DBManager()
@@ -149,7 +155,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         end_conversation = False
 
         txt = msg["text"].strip().lower()
-        username = msg["from"]["username"]
+        username = msg["from"]["username"].lower()
 
         try:
             next_message = None
