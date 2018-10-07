@@ -49,6 +49,11 @@ TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
 TODOx: /info command - "/info alkoholi" - show info about alcohol (?) -- not gonna do
 TODO: BOT_ADMIN constant
+
+bugs / feature requests / feedback:
+idea: /poista -> allow replacing entry directly
+idea: update /rank results only once per day (how?)
+idea/feedback: different message for different values of liikunta numeric value?
 """
 
 dbm = DBManager()
@@ -86,9 +91,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         txt = msg["text"].strip().lower()
 
         # some info for debugging
-        print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
-            txt,
-            msg["from"])
+        #if "username" in msg["from"] and msg["from"]["username"].lower() == "target_username":
+        if True:
+            print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
+                txt,
+                msg["from"])
 
         if is_group:
             # see if the message is aimed at us
@@ -202,11 +209,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                             start_from = next_cat)
 
             else:
-                self.add_event_continue_conversation(msg) # add last event
-                self.sender.sendMessage(ADDING_MANY_FINISHED_MESSAGE,
-                        reply_markup = ReplyKeyboardRemove()
-                        )
-                end_conversation = True
+                if self.add_event_continue_conversation(msg): # add last event
+                    self.sender.sendMessage(ADDING_MANY_FINISHED_MESSAGE,
+                            reply_markup = ReplyKeyboardRemove()
+                            )
+                    end_conversation = True
 
         elif self.state == STATE_REMOVING_EVENT:
             end_conversation = self.remove_item_continue_conversation(msg, 1)
@@ -417,11 +424,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         #pprint(calculate_indexes(good_list))
         #pprint(calculate_indexes(bad_list, good = False))
         good_str = "\n".join([
-            "*{}* - {} ({})".format(i + 1, tname, idx)
+            "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
             for i, (tname, idx) in enumerate(self.calculate_indexes(good_list))
             ][:max_no_teams])
         bad_str = "\n".join([
-            "*{}* - {} ({})".format(i + 1, tname, idx)
+            "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
             for i, (tname, idx) in enumerate(self.calculate_indexes(bad_list, False))
             ][:max_no_teams])
 

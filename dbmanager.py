@@ -120,6 +120,7 @@ class DBManager():
         return user_data[HISTORY_KEY] #[-10:] # list is trimmed by callee
 
     def get_todays_history(self, username):
+        username = username.lower()
         history = self.get_history(username)
         return list(filter(lambda x: is_today(x["timestamp"]), history))
 
@@ -128,6 +129,7 @@ class DBManager():
         Remove the 'n'th newest history entry, with one-based indexing, i.e.
         n == 1 for newest item
         """
+        username = username.lower()
         if n <= 0:
             print("ERROR: DBManager.remove_nth_newest_event_today(): {} {}".format(username, n))
             return

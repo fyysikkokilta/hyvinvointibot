@@ -50,8 +50,7 @@ HELP_MESSAGE = """Hyvinvointibotin avulla voit syöttää pisteitä itsellesi ja
 Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stressi ja uni. Jokaiseen kategoriaan voi lisätä kerran päivässä pisteitä. Eri vastauksista voit saada joko hyvinvointi-, tai pahoinvointipisteitä. Komennolla /lisaa voit lisätä yhteen kategoriaan pisteitä. Komennolla /lisaapaiva voit lisätä päivän pisteet kaikkiin kategorioihin. Komennolla /poista voit poistaa saman päivänä lisäämiäsi pisteitä.
 
 
-Komennot
-
+Komennot:
 /help - Tulosta ohje.
 /lisaa - Lisää pisteitä yhteen kategoriaan.
 /lisaapaiva - Lisää pisteitä kaikkiin kategorioihin kerralla.
@@ -80,8 +79,8 @@ Tietoja käyttäjästä {username}:
 Joukkue: {team}
 Joukkueen jäsenet: {team_members}
 Joukkueen sijoitukset ja indeksit:
-Hyvinvointi: {team_rank_good} / {n_teams} ({good_index})
-Pahoinvointi: {team_rank_bad} / {n_teams} ({bad_index})
+Hyvinvointi: {team_rank_good} / {n_teams} ({good_index:.2f})
+Pahoinvointi: {team_rank_bad} / {n_teams} ({bad_index:.2f})
 
 Viimeksi lisäämäsi tapahtumat:
 {history_str}
