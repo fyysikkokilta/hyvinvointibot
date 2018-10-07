@@ -144,15 +144,6 @@ class DBManager():
                     "$inc": { kind : -amount},
                 })
 
-    def get_top_lists(self, count):
-        """
-        Return the list of the top `count` most good and most bad teams, sorted
-        according to their score
-        """
-        #TODO: do index calculation here?
-
-        raise NotImplementedError
-
     def is_participant(self, username):
         username = username.lower()
         c = self.participants.count_documents({USERNAME_KEY : username})
@@ -167,7 +158,6 @@ class DBManager():
         Check if the given user has added an event with the given category
         (such as 'liikunta' or 'alkoholi') already today.
         """
-        #TODO: call this function somewhere
         username = username.lower()
         category = category.lower()
 
@@ -176,6 +166,25 @@ class DBManager():
 
         return bool(list(filter(filter_func, history)))
 
+    def get_team_points(self):
+        """
+        Returns a dict which contains the good and bad points of each team:
+        { teamName: {"good": ..., "bad": ... }, ... }
+        """
+        aggregate_result = self.participants.aggregate([{
+                "$group": {
+                    "_id": "$" + TEAM_KEY,
+                    GOOD_KEY: {"$sum": "$" + GOOD_KEY},
+                    BAD_KEY: {"$sum": "$" + BAD_KEY},
+                }
+            }])
+
+        ret = {}
+        for res in aggregate_result:
+            team = res["_id"]
+            ret[team] = {GOOD_KEY : res[GOOD_KEY], BAD_KEY : res[BAD_KEY]}
+
+        return ret
 
 if __name__ == "__main__":
     import sys

@@ -31,7 +31,7 @@ def liikunta_score(history):
   # history = ['Liikunta', intensity, duration]
   assert type(history) == list
   duration = min(history[2], 5)
-  print("liikunta_score(): {}".format(history)) #TODO: remove
+  #print("liikunta_score(): {}".format(history))
   score = 3*sqrt(history[1]*duration)/sqrt(6)
 
   return ScoreObject(score, GOOD_KEY, history)

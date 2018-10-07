@@ -16,7 +16,8 @@ from stringtree import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_ME
 from stringtree import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
 from stringtree import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
 from stringtree import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
-from stringtree import ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
+from stringtree import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
+from stringtree import RANK_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
@@ -27,24 +28,20 @@ BOT_TIMEOUT = 5 * 60 # 5 minutes
 BOT_TOKEN = None
 BOT_USERNAME = None
 
-# TODO: replace with real database
-#from collections import defaultdict
-#db = defaultdict(lambda: {GOOD_KEY: 0, BAD_KEY: 0, "history": [], "team": None}) #TODO: replace magic strings with string constants
-
 #TODO: here's a list of larger scale TODO's / goals
 """
-TODO: database
+TODOx: database
     x teams ~~ done
     x remove entries - done
-    - show rankings
-        - score index: divide by first position x 100
-        - show pahoinvointi in reverse order(?)
+    x show rankings -- done
+        x score index: divide by first position x 100
+        x show pahoinvointi in reverse order(?)
 TODOx: /lisaapaiva -- DONE
-TODO: /rank
+TODOx: /rank -- done
 TODOx: all conversation paths -- done
-TODO: score functions
-TODO: back button to all 'button' conversations ~ done
-TODO: prevent duplicates of the event for the same day
+TODOx: score functions -- done
+TODOx: back button to all 'button' conversations ~ done
+TODOx: prevent duplicates of the event for the same day ~ done
 TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings
 TODO: /aboutme (?): show info about me (team, username, history, team members?)
     - team info (show members for a given team), show ranking + index ?
@@ -67,7 +64,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         super(HyvinvointiChat, self).__init__(*args, **kwargs)
         self.stringTreeParser = StringTreeParser()
         self.current_score_parameters = []
-        #self.adding_event = False
         self.state = STATE_NONE
         self.events_to_add_for_today = []
 
@@ -75,24 +71,33 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         content_type, chat_type, chat_id = telepot.glance(msg)
 
-        pprint(msg)
-        print("\n")
+        #pprint(msg)
+        #print("\n")
 
         is_group = chat_type in ["group", "supergroup"]
 
         if content_type != "text":
             return
+
         txt = msg["text"].strip().lower()
 
         if is_group:
             # see if the message is aimed at us
             if re.match(r"/\w+@{}$".format(BOT_USERNAME), txt):
-                self.sender.sendMessage(
-                        GROUP_REPLY_MESSAGE,
-                        reply_to_message_id = msg["message_id"]
-                        )
+
+                # hairy hat command parsing
+                command = txt.split("@")[0]
+
+                if command == "/rank":
+                    self.send_rankings()
+                else:
+                    self.sender.sendMessage(
+                            GROUP_REPLY_MESSAGE,
+                            reply_to_message_id = msg["message_id"]
+                            )
+
             # don't do anything else in a group chat
-            #TODO: allow /rank command in group chat
+            self.close()
             return
 
         ## at this point, we're in a private chat. ##
@@ -130,6 +135,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 else:
                     self.state = STATE_ADDING_MANY_EVENTS
                     self.events_to_add_for_today = to_add[1:]
+                    self.sender.sendMessage(ADDING_MANY_START_MESSAGE)
                     self.add_event_continue_conversation(msg, start_from = to_add[0])
 
             elif command == "/lisaa":
@@ -140,8 +146,15 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 self.state = STATE_REMOVING_EVENT
                 end_conversation = self.remove_item_continue_conversation(msg, 0)
 
-            elif command == "/help":
+            elif command == "/rank":
+                self.send_rankings()
+                end_conversation = True
 
+            elif command == "/info":
+                return
+                print("TODO: /info not implemented")
+
+            elif command == "/help":
                 self.sender.sendMessage(HELP_MESSAGE)
 
             else:
@@ -201,7 +214,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
     def add_event_continue_conversation(self, msg, start_from = None):
         """
         Start/continue conversation for adding an event (such as Liikunta or
-        Alkoholi). Can be called many times for the /lisaaMonta command. Also
+        Alkoholi). Can be called many times for the /lisaapaiva command. Also
         Handles collecting the parameters needed to calculate the score, and
         storing the score in the database.
 
@@ -262,7 +275,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                         add_return_button = not restart and not adding_many,
                         add_stop_button = True, #adding_many,
                         )
-                pprint(buttons) #TODO: remove
+                #pprint(buttons)
                 reply_markup = ReplyKeyboardMarkup(keyboard = buttons,
                         resize_keyboard = True,
                         #one_time_keyboard = True,
@@ -273,10 +286,10 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 end_conversation = True
 
                 # all leaves should have a score function
-                #pprint(self.current_score_parameters) #TODO: remove
+                #pprint(self.current_score_parameters)
                 #TODO: add try-except? might throw an error if there are typos or anything
                 score_obj = next_message["score_func"](self.current_score_parameters)
-                pprint(score_obj)
+                #pprint(score_obj)
 
                 dbm.insert_score(username, score_obj)
 
@@ -293,7 +306,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                     reply_message_str,
                     reply_markup = reply_markup)
         else:
-            print("reply_message_str was empty, not sure what happened") #TODO: does this ever happen?
+            print("ERROR: reply_message_str was empty, not sure what happened") #TODO: does this ever happen?
 
         return end_conversation
 
@@ -321,7 +334,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         return the given list of history entries as a nicely formatted string
         """
         hist.sort(key = lambda x: -x["timestamp"]) # sort from new to old
-        hist_with_indices = [] #TODO
+        hist_with_indices = []
         for i, entry in enumerate(hist):
             s = str(i + 1) + " - "
             s += entry["category"].capitalize() + " - "
@@ -367,6 +380,40 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                         USER_HISTORY_COUNT_ERROR_MESSAGE.format(len(hist)))
 
                 return False
+
+
+    def send_rankings(self):
+        team_points = dbm.get_team_points()
+        pprint(team_points)
+        good_list = list(map(lambda x: [x[0], x[1][GOOD_KEY]], team_points.items()))
+        bad_list = list(map(lambda x: [x[0], x[1][BAD_KEY]], team_points.items()))
+
+        def calculate_indexes(l, good = True):
+            # l = [[name1, points], [name2, points], ... ] (either good or bad)
+            i0 = max(map(lambda x: x[1], l)) # this is the index of the leading team
+            if i0 == 0:
+                return l
+            m = 1.0 if good else -1.0
+            indexed = list(map(lambda x: [x[0], x[1] / i0 * 100 * m], l))
+            indexed.sort(key = lambda x: -x[1] * m)
+            return indexed
+
+        max_no_teams = 10
+        pprint(calculate_indexes(good_list))
+        #pprint(calculate_indexes(bad_list, good = False))
+        good_str = "\n".join([
+            "*{}* - {} ({})".format(i + 1, tname, idx)
+            for i, (tname, idx) in enumerate(calculate_indexes(good_list))
+            ][:max_no_teams])
+        bad_str = "\n".join([
+            "*{}* - {} ({})".format(i + 1, tname, idx)
+            for i, (tname, idx) in enumerate(calculate_indexes(bad_list, False))
+            ][:max_no_teams])
+
+        message_str = RANK_MESSAGE.format(good_str, bad_str)
+        self.sender.sendMessage(message_str,
+                reply_markup = ReplyKeyboardRemove(),
+                parse_mode = "markdown")
 
 
 def flush_messages(bot):

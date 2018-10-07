@@ -36,10 +36,9 @@ Olet jo lisännyt kaikki mahdolliset tapahtumat tälle päivälle. Hienoa!
 
 Voit poistaa lisäämiäsi tapahtumia komennolla /poista.
 """ #TODO: good?
+ADDING_MANY_START_MESSAGE = "Lisätään jäljellä olevat kategoriat tälle päivälle."
 ADDING_MANY_FINISHED_MESSAGE = "Kaikki päivän tapahtumat on nyt lisätty." #TODO: good?
 ADDING_MANY_CANCEL_MESSAGE = "Lopeta"
-#ADDING_MANY_CANCEL_PROMPT = "\n\nVoit keskeyttää tapahtumien lisäämisen kirjoittmalla '{}'".format(
-#        ADDING_MANY_CANCEL_MESSAGE)
 ADDING_MANY_CANCELING_MESSAGE = "Selvä."
 ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE = """
 Olet jo lisännyt tuon kategorian tänään. Voit muuttaa sitä poistamalla sen komennollla /poista ja lisäämällä sen uudelleen.
@@ -60,6 +59,19 @@ Komennot
 /lisaa - Lisää pisteitä yhteen kategoriaan.
 /lisaapaiva - Lisää pisteitä kaikkiin kategorioihin kerralla.
 /poista - Poista pisteitä."""  # TODO: format admin  # TODO: add all implemented commands
+
+#TODO: good?
+RANK_MESSAGE = """
+*Parhaat joukkueet:*
+
+*Hyvinvointisarja:*
+Sijoitus - joukkue (hyvinvointi-indeksi)
+{}
+
+*Pahoinvointisarja:*
+Sijoitus - joukkue (pahoinvointi-indeksi)
+{}
+"""
 
 """
 The STRING_TREE object contains all possible chains of discussion. It is a dict
