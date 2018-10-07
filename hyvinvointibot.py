@@ -7,17 +7,17 @@ from telepot.loop import MessageLoop
 from telepot.delegate import per_chat_id, create_open, pave_event_space
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from stringtree import StringTreeParser, InvalidMessageError
-from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
-from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
-from stringtree import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
-from stringtree import USER_HISTORY_MESSAGE, NO_USER_HISTORY_MESSAGE
-from stringtree import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_MESSAGE
-from stringtree import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
-from stringtree import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
-from stringtree import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
-from stringtree import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
-from stringtree import RANK_MESSAGE, INFO_MESSAGE
+from strings import StringTreeParser, InvalidMessageError
+from strings import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
+from strings import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
+from strings import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
+from strings import USER_HISTORY_MESSAGE, NO_USER_HISTORY_MESSAGE
+from strings import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_MESSAGE
+from strings import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
+from strings import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
+from strings import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
+from strings import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
+from strings import RANK_MESSAGE, INFO_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
