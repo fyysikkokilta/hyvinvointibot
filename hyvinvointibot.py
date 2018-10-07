@@ -42,7 +42,7 @@ TODOx: all conversation paths -- done
 TODOx: score functions -- done
 TODOx: back button to all 'button' conversations ~ done
 TODOx: prevent duplicates of the event for the same day ~ done
-TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings
+TODOx: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings -- done
 TODO: /aboutme (?): show info about me (team, username, history, team members?)
     - team info (show members for a given team), show ranking + index ?
 TODO: hottiksen tapahtumat???

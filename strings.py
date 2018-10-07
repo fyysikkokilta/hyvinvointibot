@@ -122,8 +122,8 @@ STRING_TREE = {
             "errorMessage" : "Anna vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
             "validation_func": scoring.liikunta_validate_intensity,
             "child" : {
-                "msg" : "Kuinka kauan liikunta kesti tunteina? (max X h)",
-                "errorMessage" : "Korkein hyväksytty tuntimäärä on X tuntia.",
+                "msg" : "Kuinka kauan liikunta kesti tunteina? (max 12 h)",
+                "errorMessage" : "Anna tuntimäärä desimaalilukuna välillä 0-12.",
                 "validation_func": scoring.liikunta_validate_duration,
                 "child" : {
                     "msg" : "Hieno homma, jatka samaan malliin!", #TODO: good?
