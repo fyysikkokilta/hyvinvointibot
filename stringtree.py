@@ -21,6 +21,7 @@ DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennois
 UNKNOWN_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
 HELP_MESSAGE = "help-komento on vielä toteuttamatta lörs" #TODO
 START_ADD_EVENT_MESSAGE = "Mitä olet tehnyt tänään?"
+NOT_PARTICIPANT_MESSAGE = "Et ole minkään ilmoittautuneen joukkueen jäsen. Jos haluat vielä mukaan kilpailuun, ole yhteydessä käyttäjään @martong."
 
 """
 The STRING_TREE object contains all possible chains of discussion. It is a dict
@@ -51,12 +52,12 @@ STRING_TREE = {
     "children" : {
         #TODO: change to OrderedDict?
         "liikunta" : {
-            "msg" : "Asteikolla 0-5, kuinka intensiivistä se oli?",
-            "errorMessage" : "Laita vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
+            "msg" : "Asteikolla 0-5, kuinka intensiivistä liikunta oli?",
+            "errorMessage" : "Anna vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
             "validation_func": scoring.liikunta_validate_intensity,
             "child" : {
-                "msg" : "Kuinka kauan liikunta kesti tunteina?",
-                "errorMessage" : "Laita oikea tuntimäärä kestoon.",
+                "msg" : "Kuinka kauan liikunta kesti tunteina? (max X h)",
+                "errorMessage" : "Korkein hyväksytty tuntimäärä on X tuntia.",
                 "validation_func": scoring.liikunta_validate_duration,
                 "child" : {
                     "msg" : "Hieno homma, jatka samaan malliin!", #TODO: good?
@@ -70,11 +71,11 @@ STRING_TREE = {
             "msg": """
             Kuinka rankasti tuli otettua?
 
-Voit tulkita tasoja esim. seuraavasti:
-No blast - "Ehkä otin, ehkä en"
-Medium blast - "Kun otan, niin juon"
-Full blast - tiedät mitä tämä tarkoittaa
-Bläkäri - "Vain Bläkkisvuohi muistaa"
+Voit tulkita tasoja esimerkiksi seuraavasti:
+No blast - "Ehkä otin, ehkä en."
+Medium blast - "Kun otan, niin juon."
+Full blast - Tiedät, mitä tämä tarkoittaa.
+Bläkäri - "Vain Bläkkisvuohi muistaa."
             """,
             "errorMessage": BUTTONS_ERROR_MSG,
             "children": OrderedDict([
@@ -84,43 +85,58 @@ Bläkäri - "Vain Bläkkisvuohi muistaa"
                 }),
                 #TODO: capitalization?
                 ("no blast", {
-                    "msg": "Selvä homma.", #TODO
+                    "msg": "Toivottavasti pari lasillista rentoutti!", #TODO
                     "score_func": lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
                 ("medium blast", {
-                    "msg": "Hienosti.", #TODO
+                    "msg": "Nää on näitä.", #TODO
                     "score_func": lambda h: ScoreObject(2, BAD_KEY, h),
                 }),
                 ("full blast", {
-                    "msg": "Hienosti.", #TODO
+                    "msg": "Hienosti. ", #TODO
                     "score_func": lambda h: ScoreObject(3, BAD_KEY, h),
                 }),
                 ("bläkäri", {
-                    "msg": "Hienosti.", #TODO
+                    "msg": "Tsemppiä tähän päivään!", #TODO
                     "score_func": lambda h: ScoreObject(4, BAD_KEY, h),
                 }),
              ]),
         },
         "ruoka" : {
-            "msg" : "Miten hyvin söit tänään?",
+            "msg" : """
+            Miten hyvin söit tänään?
+
+Voit tulkita vaihtoehtoja seuraavasti:
+Tavallista paremmin - Laitoit esimerkiksi itse ruokaa tai muuten kiinnitit huomiota aterioihisi.
+Normipäivä - Sinulle tyypilliset ruokailutottumukset.
+Huonosti - Nälkä yllätti pahasti tai tuli mässäiltyä.
+            """,
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("panostin tänään",  {
-                    "msg" : "Hienoa.",          #TODO
+                    "msg" : "Hienoa! Jatka samaan malliin.",          #TODO
                     "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
                 }),
                 ("normipäivä", {
-                    "msg" : "Hienosti.",        #TODO
+                    "msg" : "Selvä homma.",        #TODO
                     "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
                 ("huonosti", {
-                    "msg" : "Hienosti.",        #TODO
+                    "msg" : "Sellaista sattuu!",        #TODO
                     "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
             ]),
         },
         "vapaa-aika" : {
-            "msg" : "Kuinka paljon vietit vapaa-aikaa tänään?",
+            "msg" : """
+            Kuinka paljon vietit vapaa-aikaa tänään?
+
+Voit tulkita vaihtoehtoja seuraavasti:
+Runsaasti - Vapaa-aikaa oli tavallista enemmän ja se oli rentouttavaa.
+Sopivasti - Vapaa-aikaa oli sen verran kuin itse toivot jokaiselle päivälle.
+En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkautuisi.
+En lainkaan - Koko päivä meni hommissa D:
+            """,
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("runsaasti", {
@@ -131,12 +147,12 @@ Bläkäri - "Vain Bläkkisvuohi muistaa"
                     "msg" : "Hienosti",         #TODO
                     "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
                 }),
-                ("vähän", {
+                ("ei riittävästi", {
                     "msg" : "Hienosti",         #TODO
                     "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
-                ("ei riittävästi", {
-                    "msg" : "Hienosti",          #TODO
+                ("en lainkaan", {
+                    "msg" : "Muista ottaa aikaa myös itsellesi!",
                     "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
             ]),
@@ -185,6 +201,7 @@ Bläkäri - "Vain Bläkkisvuohi muistaa"
     #TODO: /lisaaMonta is a special case, handle it...
     "root": True
 }
+
 
 def verifyTree(tree, verbose = False):
     """
