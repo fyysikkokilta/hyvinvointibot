@@ -19,9 +19,20 @@ RETURN_MESSAGE = "alkuun"
 GROUP_REPLY_MESSAGE = "Lähetä komentoja yksityisviestillä."
 DID_NOT_UNDERSTAND_MESSAGE = "En ymmärrä. Käytä jotakin annetuista komennoista tai kokeile /help."
 UNKNOWN_COMMAND_MESSAGE = "En ymmärrä komentoa. Käytä jotakin annetuista komennoista tai kokeile /help."
-HELP_MESSAGE = "help-komento on vielä toteuttamatta lörs" #TODO
-START_ADD_EVENT_MESSAGE = "Mitä olet tehnyt tänään?"
+START_ADD_EVENT_MESSAGE = "Mihin kategoriaan haluat lisätä pisteitä?"
 NOT_PARTICIPANT_MESSAGE = "Et ole minkään ilmoittautuneen joukkueen jäsen. Jos haluat vielä mukaan kilpailuun, ole yhteydessä käyttäjään @martong."
+HELP_MESSAGE = """Hyvinvointibotin avulla voit syöttää pisteitä itsellesi ja joukkueellesi Hottiksen hyvinvointikilpailussa. Syöttääksesi pisteitä sinun pitää olla kilpailuun ilmoittautuneen joukkueen jäsen. Jos haluat osallistua kilpailuun jälkikäteen, ota yhteyttä käyttäjään @martong.
+
+Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stressi ja uni. Jokaiseen kategoriaan voi lisätä kerran päivässä pisteitä. Eri vastauksista voit saada joko hyvinvointi-, tai pahoinvointipisteitä. Komennolla /lisaa voit lisätä yhteen kategoriaan pisteitä. Komennolla /lisaapaiva voit lisätä päivän pisteet kaikkiin kategorioihin.
+
+
+Komennot
+
+
+/help - Tulosta ohje.
+/lisaa - Lisää pisteitä yhteen kategoriaan.
+/lisaapaiva - Lisää pisteitä kaikkiin kategorioihin kerralla.
+/poista - Poista pisteitä."""  # TODO: format admin  # TODO: add all implemented commands
 
 """
 The STRING_TREE object contains all possible chains of discussion. It is a dict
