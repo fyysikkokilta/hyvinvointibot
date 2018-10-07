@@ -2,8 +2,10 @@
 This module contains functions for calculating scores for different types of
 activities. Each function takes a list as a parameter and computes the score
 based on that. The score is returned wrapped into a score object, which has a
-type "good" (hyvinvointi) or "bad" (pahoinvoint) and a numeric value.
+type "good" (hyvinvointi) or "bad" (pahoinvointi) and a numeric value.
 """
+from math import sqrt
+
 
 GOOD_KEY = "good"
 BAD_KEY = "bad"
@@ -28,8 +30,9 @@ class ScoreObject():
 def liikunta_score(history):
   # history = ['Liikunta', intensity, duration]
   assert type(history) == list
+  duration = min(history[2], 5)
   print("liikunta_score(): {}".format(history)) #TODO: remove
-  score = history[1] * history[2] #TODO: replace this with something that is not linear in duration
+  score = 3*sqrt(history[1]*duration)/sqrt(6)
 
   return ScoreObject(score, GOOD_KEY, history)
 
