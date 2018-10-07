@@ -62,6 +62,14 @@ class DBManager():
         self.db = self.connection[DATABASE_NAME]
         self.participants = self.db.participants
 
+    def get_user_data(self, username):
+        username = username.lower()
+        user_data = self.participants.find_one({USERNAME_KEY : username})
+        if user_data is None:
+            print("ERROR: DBManager.get_user_data(): could not find user_data for {}\n".format(username))
+            return None
+        return user_data
+
     def insert_score(self, username, score_obj):
         """
         Add the information of the score object to the user
@@ -85,6 +93,8 @@ class DBManager():
                     "timestamp": time.time(),
                     }
 
+            from pprint import pprint; pprint(history_entry_dict)
+
             user_hist = user_data[HISTORY_KEY]
             user_hist.append(history_entry_dict)
 
@@ -101,6 +111,7 @@ class DBManager():
 
 
     def get_history(self, username):
+        username = username.lower()
         user_data = self.participants.find_one({USERNAME_KEY : username})
         if user_data is None:
             print("ERROR: DBManager.get_history(): user_data is None for {}".format(username))
@@ -165,6 +176,14 @@ class DBManager():
         filter_func = lambda x: x["category"] == category and is_today(x["timestamp"])
 
         return bool(list(filter(filter_func, history)))
+
+    def get_team_members(self, team):
+        query_result = self.participants.find(
+                { TEAM_KEY : team },
+                projection = {USERNAME_KEY: True, "_id": False}
+            )
+        return list(map(lambda d: d[USERNAME_KEY], query_result))
+
 
     def get_team_points(self):
         """
