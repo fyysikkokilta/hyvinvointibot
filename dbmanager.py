@@ -104,12 +104,26 @@ class DBManager():
         return list(filter(lambda x: is_today(x[-1]), history))
 
     def remove_nth_newest_event_today(self, username, n):
-        #user_data = self.participants.find_one({USERNAME_KEY : username})
-        #if user_data is None:
-        #    print("ERROR: DBManager.remove_nth_newest_event(): user_data is None for {}".format(username))
-        #    return
+        """
+        Remove the 'n'th newest history entry, with one-based indexing, i.e.
+        n == 1 for newest item
+        """
+        if n <= 0:
+            print("ERROR: DBManager.remove_nth_newest_event_today(): {} {}".format(username, n))
+            return
 
-        hist = self.get_todays_history(username)
+        hist = self.get_history(username)
+        hist.sort(key = lambda x: x[-1]) # sort from old to new, just in case
+        hist_today = list(filter(lambda x: is_today(x[-1]), hist))
+        if not hist_today:
+            print("ERROR: DBManager.remove_nth_newest_event_today(): {} {}: no events today".format(username, n))
+            return
+
+        timestamp_to_remove = hist_today[-n][-1]
+        hist = list(filter(lambda x: x[-1] != timestamp_to_remove, hist))
+        self.participants.update_one(
+                {USERNAME_KEY: username},
+                {"$set": { HISTORY_KEY : hist}})
 
     def get_top_lists(self, count):
         """

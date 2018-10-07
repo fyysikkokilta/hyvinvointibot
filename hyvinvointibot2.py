@@ -45,6 +45,7 @@ TODO: /aboutme (?): show info about me (team, username, history, team members?)
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
 TODO: /info command - "/info alkoholi" - show info about alcohol
+TODO: BOT_ADMIN constant
 """
 
 dbm = DBManager()
