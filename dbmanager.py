@@ -10,6 +10,8 @@ from scoring import GOOD_KEY, BAD_KEY
 
 DATABASE_NAME = "hyvinvointi-2018-test" #TODO: remove -test
 HISTORY_KEY = "history"
+USERNAME_KEY = "username"
+TEAM_KEY = "team"
 
 def parse_teams_and_add_to_db(filename):
     # read teams from a text file and store them in the database
@@ -19,7 +21,7 @@ def parse_teams_and_add_to_db(filename):
 
     # assure that each username gets added only once
     # if the index already exists, this doesn't do anything
-    participants.create_index("username", unique = True)
+    participants.create_index(USERNAME_KEY, unique = True)
 
     with open(filename, "r") as f:
         print("Adding participants to database {}".format(DATABASE_NAME))
@@ -40,8 +42,8 @@ def parse_teams_and_add_to_db(filename):
                     # pretty hacky to use try-except here...
                     result = participants.insert_one(
                             {
-                                "team" : team_name,
-                                "username" : username,
+                                TEAM_KEY : team_name,
+                                USERNAME_KEY : username,
                                 GOOD_KEY : 0,
                                 BAD_KEY : 0,
                                 HISTORY_KEY : [],
@@ -64,7 +66,7 @@ class DBManager():
         Add the information of the score object to the user
         """
         username = username.lower()
-        user_data = self.participants.find_one({"username": username})
+        user_data = self.participants.find_one({USERNAME_KEY : username})
         if user_data is None:
             print("ERROR: DBManager.insert_score(): could not find user_data for {}\n".format(username))
             return
@@ -77,7 +79,7 @@ class DBManager():
             user_data[HISTORY_KEY].append(hist_plus_timestamp_and_value)
 
             # ehh, this is probably pretty stupid to bounce the history list around between mem <-> db, but oh well...
-            self.participants.update_one({"username": username}, {"$set": user_data})
+            self.participants.update_one({USERNAME_KEY : username}, {"$set": user_data})
 
         except Exception as e:
             print("ERROR: DBManager.insert_score(): {}".format(e))
@@ -85,9 +87,9 @@ class DBManager():
 
 
     def get_history(self, username):
-        history = participants.find_one({"username" : username})
+        history = participants.find_one({USERNAME_KEY : username})
         if history is None:
-            print("history is None")
+            print("ERROR: DBManager.get_history(): history is None for {}".format(username))
             return
 
         return history[HISTORY_KEY][-10:]
@@ -99,6 +101,16 @@ class DBManager():
         """
 
         raise NotImplementedError
+
+    def is_participant(self, username):
+        username = username.lower()
+        c = self.participants.count_documents({USERNAME_KEY : username})
+
+        if c > 1:
+            print("DBManager.is_participant(): found {} entries for {}".format(c, username))
+
+        return c >= 1
+
 
 
 if __name__ == "__main__":

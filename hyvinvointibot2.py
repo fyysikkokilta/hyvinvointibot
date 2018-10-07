@@ -28,7 +28,7 @@ BOT_USERNAME = None
 #TODO: here's a list of larger scale TODO's / goals
 """
 TODO: database
-    - teams
+    x teams ~~ done
     - remove entries
     - show rankings
         - score index: divide by first position x 100
