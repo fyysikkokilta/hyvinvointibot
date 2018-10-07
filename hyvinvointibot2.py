@@ -13,8 +13,10 @@ from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
 from stringtree import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
 from stringtree import USER_HISTORY_MESSAGE, NO_USER_HISTORY_MESSAGE
 from stringtree import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_MESSAGE
-from stringtree import USER_HISTORY_COUNT_PROMPT
-from stringtree import NOT_PARTICIPANT_MESSAGE
+from stringtree import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
+from stringtree import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
+from stringtree import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
+from stringtree import ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
@@ -33,21 +35,22 @@ BOT_USERNAME = None
 """
 TODO: database
     x teams ~~ done
-    - remove entries
+    x remove entries - done
     - show rankings
         - score index: divide by first position x 100
         - show pahoinvointi in reverse order(?)
-TODO: all conversation paths
+TODOx: /lisaapaiva -- DONE
+TODO: /rank
+TODOx: all conversation paths -- done
 TODO: score functions
 TODO: back button to all 'button' conversations ~ done
-TODO: /lisaapaiva
 TODO: prevent duplicates of the event for the same day
 TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings
 TODO: /aboutme (?): show info about me (team, username, history, team members?)
     - team info (show members for a given team), show ranking + index ?
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
-TODO: /info command - "/info alkoholi" - show info about alcohol
+TODO: /info command - "/info alkoholi" - show info about alcohol (?)
 TODO: BOT_ADMIN constant
 """
 
@@ -66,6 +69,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         self.current_score_parameters = []
         #self.adding_event = False
         self.state = STATE_NONE
+        self.events_to_add_for_today = []
 
     def on_chat_message(self, msg):
 
@@ -98,6 +102,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             self.sender.sendMessage(NOT_PARTICIPANT_MESSAGE)
             return
 
+        username = msg["from"]["username"]
         command = None
         reply_markup = ReplyKeyboardRemove()
         reply_message_str = None
@@ -108,18 +113,28 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         if command:
 
-            #self.adding_event = False # TODO: good idea?
             self.state = STATE_NONE
 
-            if command == "/lisaamonta":
-                print("NOT IMPLEMENTED: /lisaamonta")
-                #self.adding_many_events = True #TODO
-                #self.state = STATE_ADDING_MANY_EVENTS
-                return
+            if command == "/lisaapaiva":
+                categories = self.stringTreeParser.get_categories()
+                already_added = dbm.get_todays_history(username)
+                already_added = list(map(lambda x: x["category"], already_added))
+                to_add = [cat for cat in categories if cat not in already_added]
+
+                if not to_add:
+                    self.sender.sendMessage(ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE,
+                            reply_markup = reply_markup)
+
+                    end_conversation = True
+
+                else:
+                    self.state = STATE_ADDING_MANY_EVENTS
+                    self.events_to_add_for_today = to_add[1:]
+                    self.add_event_continue_conversation(msg, start_from = to_add[0])
+
             elif command == "/lisaa":
-                #self.adding_event = True
                 self.state = STATE_ADDING_EVENT
-                self.add_event_continue_conversation(msg, restart = True)
+                self.add_event_continue_conversation(msg, start_from = "root")
 
             elif command == "/poista":
                 self.state = STATE_REMOVING_EVENT
@@ -132,16 +147,44 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             else:
                 self.sender.sendMessage(UNKNOWN_COMMAND_MESSAGE)
 
-        #elif self.adding_event:
         elif self.state == STATE_ADDING_EVENT:
             if txt in [RETURN_MESSAGE.lower(), RETURN_BUTTON_MESSAGE.lower()]:
-                self.add_event_continue_conversation(msg, restart = True)
+                self.add_event_continue_conversation(msg, start_from = "root")
+
+            elif txt == ADDING_MANY_CANCEL_MESSAGE.lower():
+                self.sender.sendMessage(ADDING_MANY_CANCELING_MESSAGE,
+                        reply_markup = ReplyKeyboardRemove())
+                end_conversation = True
+
             else:
-                #TODO: is end_conversation = continue() correct here?
-                end_conversation = self.add_event_continue_conversation(msg)
-                if end_conversation:
-                    #self.adding_event = False
-                    self.state = STATE_NONE
+                if dbm.has_done_today(username, txt): # hacky...
+                    self.sender.sendMessage(ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE,
+                            )
+                else:
+                    end_conversation = self.add_event_continue_conversation(msg)
+
+        elif self.state == STATE_ADDING_MANY_EVENTS:
+
+            if txt == ADDING_MANY_CANCEL_MESSAGE.lower():
+                self.events_to_add_for_today = []
+                self.sender.sendMessage(ADDING_MANY_CANCELING_MESSAGE,
+                        reply_markup = ReplyKeyboardRemove())
+                end_conversation = True
+
+            elif self.events_to_add_for_today:
+                if self.add_event_continue_conversation(msg):
+
+                    next_cat = self.events_to_add_for_today.pop(0)
+
+                    self.add_event_continue_conversation(msg,
+                            start_from = next_cat)
+
+            else:
+                self.add_event_continue_conversation(msg) # add last event
+                self.sender.sendMessage(ADDING_MANY_FINISHED_MESSAGE,
+                        reply_markup = ReplyKeyboardRemove()
+                        )
+                end_conversation = True
 
         elif self.state == STATE_REMOVING_EVENT:
             end_conversation = self.remove_item_continue_conversation(msg, 1)
@@ -155,7 +198,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             self.close()
 
 
-    def add_event_continue_conversation(self, msg, restart = False):
+    def add_event_continue_conversation(self, msg, start_from = None):
         """
         Start/continue conversation for adding an event (such as Liikunta or
         Alkoholi). Can be called many times for the /lisaaMonta command. Also
@@ -165,7 +208,9 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         params:
             msg: Telegram message object. assumed to have content_type == "text"
                 and a valid username.
-            restart: restart the conversation
+            start_from: if not None, start the conversation from here. should
+                be either one of stringTreeParser.get_categories() or 'root'
+                for restarting. otherwise attempt to continue where we left off
         returns:
             True if the conversation has ended, False otherwise
         """
@@ -176,6 +221,8 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         txt = msg["text"].strip().lower()
         username = msg["from"]["username"].lower()
+        restart = start_from == "root"
+        adding_many = self.state == STATE_ADDING_MANY_EVENTS
 
         try:
             next_message = None
@@ -186,25 +233,40 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 self.current_score_parameters = []
                 next_message = self.stringTreeParser.current_message
 
+            elif start_from in self.stringTreeParser.get_categories():
+
+                self.stringTreeParser.reset()
+                self.current_score_parameters = []
+                next_message, validated_value = self.stringTreeParser.goForward(start_from)
+
             else:
                 # attempt to continue conversation, raises an exception if it fails
                 next_message, validated_value = self.stringTreeParser.goForward(txt)
 
             reply_message_str = next_message["msg"]
 
+            #if adding_many:
+            #    reply_message_str += ADDING_MANY_CANCEL_PROMPT
+
             if validated_value is not None:
                 self.current_score_parameters.append(validated_value)
             elif not restart:
-                self.current_score_parameters.append(txt)
+                if start_from is None:
+                    self.current_score_parameters.append(txt)
+                else:
+                    self.current_score_parameters.append(start_from)
 
             if "children" in next_message:
-                #self.current_score_parameters.append(txt)
                 buttons = self.get_buttons(
                         next_message["children"].keys(),
-                        add_return_button = not restart,
+                        add_return_button = not restart and not adding_many,
+                        add_stop_button = True, #adding_many,
                         )
                 pprint(buttons) #TODO: remove
-                reply_markup = ReplyKeyboardMarkup(keyboard = buttons, resize_keyboard = True)
+                reply_markup = ReplyKeyboardMarkup(keyboard = buttons,
+                        resize_keyboard = True,
+                        #one_time_keyboard = True,
+                        )
 
             elif "child" not in next_message:
                 # we're at a leaf
@@ -215,14 +277,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 #TODO: add try-except? might throw an error if there are typos or anything
                 score_obj = next_message["score_func"](self.current_score_parameters)
                 pprint(score_obj)
-
-                #db[uname][score_obj.type] += score_obj.value
-
-                #score_params_with_date = self.current_score_parameters
-                #score_params_with_date.append(time.time())
-                #db[uname]["history"].append(score_params_with_date) #TODO
-
-                #pprint(db) #TODO: remove
 
                 dbm.insert_score(username, score_obj)
 
@@ -244,7 +298,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         return end_conversation
 
 
-    def get_buttons(self, list_of_strs, add_return_button = True):
+    def get_buttons(self, list_of_strs, add_return_button = True, add_stop_button = False):
         """
         Small helper function for reshaping a list of strings to a 2D array of
         strings with appropriate dimensions.
@@ -253,6 +307,9 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         list_of_strs = list(map(lambda b: b.capitalize(), list_of_strs))
         if add_return_button:
             list_of_strs.append(RETURN_BUTTON_MESSAGE)
+        if add_stop_button:
+            list_of_strs.append(ADDING_MANY_CANCEL_MESSAGE)
+
         buttons = []
         for i in range(0, len(list_of_strs), max_row_length):
             buttons.append(list_of_strs[i:i+max_row_length])

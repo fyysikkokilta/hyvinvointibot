@@ -31,6 +31,22 @@ NO_USER_HISTORY_MESSAGE = "Et ole lisännyt tänään vielä yhtään tapahtumaa
 USER_HISTORY_COUNT_ERROR_MESSAGE = "Anna kokonaisluku välillä 1-{}"
 ITEM_REMOVED_SUCCESS_MESSAGE = "Tapahtuma poistettiin onnistuneesti."
 
+ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE = """
+Olet jo lisännyt kaikki mahdolliset tapahtumat tälle päivälle. Hienoa!
+
+Voit poistaa lisäämiäsi tapahtumia komennolla /poista.
+""" #TODO: good?
+ADDING_MANY_FINISHED_MESSAGE = "Kaikki päivän tapahtumat on nyt lisätty." #TODO: good?
+ADDING_MANY_CANCEL_MESSAGE = "Lopeta"
+#ADDING_MANY_CANCEL_PROMPT = "\n\nVoit keskeyttää tapahtumien lisäämisen kirjoittmalla '{}'".format(
+#        ADDING_MANY_CANCEL_MESSAGE)
+ADDING_MANY_CANCELING_MESSAGE = "Selvä."
+ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE = """
+Olet jo lisännyt tuon kategorian tänään. Voit muuttaa sitä poistamalla sen komennollla /poista ja lisäämällä sen uudelleen.
+
+Kokeile jotakin toista kategoriaa.
+"""
+
 
 HELP_MESSAGE = """Hyvinvointibotin avulla voit syöttää pisteitä itsellesi ja joukkueellesi Hottiksen hyvinvointikilpailussa. Syöttääksesi pisteitä sinun pitää olla kilpailuun ilmoittautuneen joukkueen jäsen. Jos haluat osallistua kilpailuun jälkikäteen, ota yhteyttä käyttäjään @martong.
 
@@ -74,7 +90,7 @@ STRING_TREE = {
     "children" : {
         #TODO: change to OrderedDict?
         "liikunta" : {
-            "msg" : "Asteikolla 0-5, kuinka intensiivistä liikunta oli?",
+            "msg" : "Asteikolla 0-5, kuinka intensiivistä liikuntaa harrastit?",
             "errorMessage" : "Anna vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
             "validation_func": scoring.liikunta_validate_intensity,
             "child" : {
@@ -89,7 +105,7 @@ STRING_TREE = {
         },
         "alkoholi" : {
             "msg": """
-            Kuinka rankasti tuli otettua?
+            Kuinka rankasti tuli dokattua eilen?
 
 Voit tulkita tasoja esimerkiksi seuraavasti:
 No blast - "Ehkä otin, ehkä en."
@@ -99,7 +115,7 @@ Bläkäri - "Vain Bläkkisvuohi muistaa."
             """,
             "errorMessage": BUTTONS_ERROR_MSG,
             "children": OrderedDict([
-                ("ei ollenkaan", {
+                ("ei ollenkaan!", {
                     "msg": "Hienoa!",
                     "score_func": lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
@@ -192,9 +208,7 @@ En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkau
         "uni" : {
             "msg" : """Kuinka hyvin nukuit viime yönä?
 
-Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa vastauksissasi huomioon myös unen laadun.
-
-            """,
+Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa vastauksissasi huomioon myös unen laadun.""",
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("tosi hyvin", {
@@ -216,7 +230,6 @@ Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa v
             ]),
         },
     },
-    #TODO: /lisaaMonta is a special case, handle it...
     "root": True
 }
 
@@ -257,7 +270,7 @@ class StringTreeParser():
     def __init__(self):
         self.root = STRING_TREE
         self.current_message = STRING_TREE
-        self.message_chain = []
+        #self.message_chain = []
 
     def goForward(self, message_str): #, user): #TODO
         """
@@ -281,7 +294,7 @@ class StringTreeParser():
                 #if message_str in [RETURN_BUTTON_MESSAGE, RETURN_MESSAGE]: self.reset(); return self.nextMessage #TODO: not good idea to reset here without notifying caller...
                 raise InvalidMessageError("invalid button") #TODO: should include errorMessage here?
             else:
-                self.message_chain.append(node)
+                #self.message_chain.append(node)
                 self.current_message = children[message_str]
                 #return self.current_message #TODO: move this to 'ret'?
                 next_message = self.current_message
@@ -292,7 +305,7 @@ class StringTreeParser():
             if validated_value is None:
                 raise InvalidMessageError("invalid value")
             else:
-                self.message_chain.append(node)
+                #self.message_chain.append(node)
                 self.current_message = node["child"]
                 #return self.current_message
                 next_message = self.current_message
@@ -305,15 +318,26 @@ class StringTreeParser():
 
         return ret
 
-    def goBack(self):
-        if self.message_chain:
-            self.current_message = self.message_chain.pop()
-        else:
-            raise NotImplementedError
+    #def goBack(self):
+    #    if self.message_chain:
+    #        self.current_message = self.message_chain.pop()
+    #    else:
+    #        raise NotImplementedError
 
     def reset(self):
         self.current_message = self.root
-        self.message_chain = []
+        #self.message_chain = []
+
+    def get_categories(self):
+        return list(self.root["children"].keys())
+
+    #def go_to_category(self, category):
+    #    category = category.lower()
+    #    #if category not in self.root["children"]:
+    #    #    #TODO: raise valueError?
+
+    #    self.current_message = category
+
 
     def is_at_root(self):
         return self.current_message == self.root
