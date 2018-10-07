@@ -39,9 +39,9 @@ TODO: score functions
 TODO: back button to all 'button' conversations ~ done
 TODO: /lisaapaiva
 TODO: prevent duplicates of the event for the same day
-TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot
+TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings
 TODO: /aboutme (?): show info about me (team, username, history, team members?)
-    - team info (show members for a given team)
+    - team info (show members for a given team), show ranking + index ?
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
 TODO: /info command - "/info alkoholi" - show info about alcohol

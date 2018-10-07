@@ -74,15 +74,24 @@ class DBManager():
 
         try:
             score = score_obj.value
-            score_obj_hist_extended = score_obj.history
-            score_obj_hist_extended.extend([score, time.time()])
+            kind = score_obj.type
+
+            # hardcoded DB schema ...
+            history_entry_dict = {
+                    "params": score_obj.history[1:],
+                    "category": score_obj.history[0],
+                    "type": score_obj.type,
+                    "value": score_obj.value,
+                    "timestamp": time.time(),
+                    }
+
             user_hist = user_data[HISTORY_KEY]
-            user_hist.append(score_obj_hist_extended)
+            user_hist.append(history_entry_dict)
 
             self.participants.update_one(
                     {USERNAME_KEY : username},
                     {
-                        "$inc": {score_obj.type : score},
+                        "$inc": {kind : score},
                         "$set": {HISTORY_KEY : user_hist},
                     })
 
@@ -101,7 +110,7 @@ class DBManager():
 
     def get_todays_history(self, username):
         history = self.get_history(username)
-        return list(filter(lambda x: is_today(x[-1]), history))
+        return list(filter(lambda x: is_today(x["timestamp"]), history))
 
     def remove_nth_newest_event_today(self, username, n):
         """
@@ -113,17 +122,27 @@ class DBManager():
             return
 
         hist = self.get_history(username)
-        hist.sort(key = lambda x: x[-1]) # sort from old to new, just in case
-        hist_today = list(filter(lambda x: is_today(x[-1]), hist))
+        hist.sort(key = lambda x: x["timestamp"]) # sort from old to new, just in case
+        hist_today = list(filter(lambda x: is_today(x["timestamp"]), hist))
         if not hist_today:
             print("ERROR: DBManager.remove_nth_newest_event_today(): {} {}: no events today".format(username, n))
             return
 
-        timestamp_to_remove = hist_today[-n][-1]
-        hist = list(filter(lambda x: x[-1] != timestamp_to_remove, hist))
+        #timestamp_to_remove = hist_today[-n][-1]
+        item_to_remove = hist_today[-n]
+        timestamp = item_to_remove["timestamp"]
+        kind = item_to_remove["type"]
+        amount = item_to_remove["value"]
+
+        #from pprint import pprint; pprint(item_to_remove)
+
+        hist = list(filter(lambda x: x["timestamp"] != timestamp, hist))
         self.participants.update_one(
                 {USERNAME_KEY: username},
-                {"$set": { HISTORY_KEY : hist}})
+                {
+                    "$set": { HISTORY_KEY : hist},
+                    "$inc": { kind : -amount},
+                })
 
     def get_top_lists(self, count):
         """
@@ -153,8 +172,7 @@ class DBManager():
         category = category.lower()
 
         history = self.get_history(username)
-        # x[0] should always be the category and x[-1] the timestamp
-        filter_func = lambda x: x[0] == category and is_today(x[-1])
+        filter_func = lambda x: x["category"] == category and is_today(x["timestamp"])
 
         return bool(list(filter(filter_func, history)))
 
