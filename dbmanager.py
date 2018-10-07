@@ -5,6 +5,7 @@ DBManager is a thin wrapper around PyMongo
 import time
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
+from utils import is_today
 
 from scoring import GOOD_KEY, BAD_KEY
 
@@ -73,13 +74,17 @@ class DBManager():
 
         try:
             score = score_obj.value
-            user_data[score_obj.type] += score #TODO: this is incorrect -- use update
-            hist_plus_timestamp_and_value = score_obj.history
-            hist_plus_timestamp_and_value.extend([score, time.time()])
-            user_data[HISTORY_KEY].append(hist_plus_timestamp_and_value)
+            score_obj_hist_extended = score_obj.history
+            score_obj_hist_extended.extend([score, time.time()])
+            user_hist = user_data[HISTORY_KEY]
+            user_hist.append(score_obj_hist_extended)
 
-            # ehh, this is probably pretty stupid to bounce the history list around between mem <-> db, but oh well...
-            self.participants.update_one({USERNAME_KEY : username}, {"$set": user_data})
+            self.participants.update_one(
+                    {USERNAME_KEY : username},
+                    {
+                        "$inc": {score_obj.type : score},
+                        "$set": {HISTORY_KEY : user_hist},
+                    })
 
         except Exception as e:
             print("ERROR: DBManager.insert_score(): {}".format(e))
