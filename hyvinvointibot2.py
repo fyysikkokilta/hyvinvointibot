@@ -17,11 +17,11 @@ from stringtree import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESS
 from stringtree import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
 from stringtree import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
 from stringtree import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
-from stringtree import RANK_MESSAGE
+from stringtree import RANK_MESSAGE, INFO_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
-from dbmanager import DBManager
+from dbmanager import DBManager, TEAM_KEY
 
 # globals, might be defined in functions
 BOT_TIMEOUT = 5 * 60 # 5 minutes
@@ -151,10 +151,10 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 end_conversation = True
 
             elif command == "/info":
-                return
-                print("TODO: /info not implemented")
+                self.send_info(username)
+                end_conversation = True
 
-            elif command == "/help":
+            elif command == "/help" or command == "/start":
                 self.sender.sendMessage(HELP_MESSAGE)
 
             else:
@@ -382,38 +382,79 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 return False
 
 
+    def calculate_indexes(self, team_list, good = True):
+        """
+        calculate the good or bad indexes for team_list, structured as follows:
+        [[name1, points], [name2, points], ... ] where points are either good
+        or bad points. Also sorts the result
+        """
+        # this is the score of the leading team, which has an index of 100
+        i0 = max(map(lambda x: x[1], team_list))
+
+        if i0 == 0:
+            return team_list
+        m = 1.0 if good else -1.0
+        indexed = list(map(lambda x: [x[0], x[1] / i0 * 100 * m], team_list))
+        indexed.sort(key = lambda x: -x[1] * m)
+        return indexed
+
     def send_rankings(self):
         team_points = dbm.get_team_points()
         pprint(team_points)
         good_list = list(map(lambda x: [x[0], x[1][GOOD_KEY]], team_points.items()))
         bad_list = list(map(lambda x: [x[0], x[1][BAD_KEY]], team_points.items()))
 
-        def calculate_indexes(l, good = True):
-            # l = [[name1, points], [name2, points], ... ] (either good or bad)
-            i0 = max(map(lambda x: x[1], l)) # this is the index of the leading team
-            if i0 == 0:
-                return l
-            m = 1.0 if good else -1.0
-            indexed = list(map(lambda x: [x[0], x[1] / i0 * 100 * m], l))
-            indexed.sort(key = lambda x: -x[1] * m)
-            return indexed
-
         max_no_teams = 10
-        pprint(calculate_indexes(good_list))
+        #pprint(calculate_indexes(good_list))
         #pprint(calculate_indexes(bad_list, good = False))
         good_str = "\n".join([
             "*{}* - {} ({})".format(i + 1, tname, idx)
-            for i, (tname, idx) in enumerate(calculate_indexes(good_list))
+            for i, (tname, idx) in enumerate(self.calculate_indexes(good_list))
             ][:max_no_teams])
         bad_str = "\n".join([
             "*{}* - {} ({})".format(i + 1, tname, idx)
-            for i, (tname, idx) in enumerate(calculate_indexes(bad_list, False))
+            for i, (tname, idx) in enumerate(self.calculate_indexes(bad_list, False))
             ][:max_no_teams])
 
         message_str = RANK_MESSAGE.format(good_str, bad_str)
         self.sender.sendMessage(message_str,
                 reply_markup = ReplyKeyboardRemove(),
                 parse_mode = "markdown")
+
+    def send_info(self, username):
+        user_data = dbm.get_user_data(username)
+        todays_history = dbm.get_todays_history(username)
+        team_points = dbm.get_team_points()
+
+        team = user_data[TEAM_KEY]
+        team_members = ["@" + m for m in dbm.get_team_members(team)]
+        n_teams = len(team_points)
+        good_list = self.calculate_indexes(
+                list(map(lambda x: [x[0], x[1][GOOD_KEY]], team_points.items()))
+                )
+        bad_list = self.calculate_indexes(
+                list(map(lambda x: [x[0], x[1][BAD_KEY]], team_points.items())),
+                good = False,
+                )
+        good_idx = next(t[1] for t in good_list if t[0] == team)
+        bad_idx = next(t[1] for t in bad_list if t[0] == team)
+
+        team_rank_good = [tname for tname, _ in good_list].index(team) + 1
+        team_rank_bad  = [tname for tname, _ in bad_list ].index(team) + 1
+
+        message_str = INFO_MESSAGE.format(
+                username = "@" + username,
+                team = team,
+                team_members = ", ".join(team_members),
+                team_rank_good = team_rank_good,
+                team_rank_bad = team_rank_bad,
+                good_index = good_idx,
+                bad_index = bad_idx,
+                n_teams = n_teams,
+                history_str = self.format_user_history(todays_history),
+                )
+        self.sender.sendMessage(message_str,
+               parse_mode = "markdown")
 
 
 def flush_messages(bot):

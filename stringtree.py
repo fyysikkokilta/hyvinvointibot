@@ -58,7 +58,10 @@ Komennot
 /help - Tulosta ohje.
 /lisaa - Lisää pisteitä yhteen kategoriaan.
 /lisaapaiva - Lisää pisteitä kaikkiin kategorioihin kerralla.
-/poista - Poista pisteitä."""  # TODO: format admin  # TODO: add all implemented commands
+/poista - Poista pisteitä.
+/rank - Näytä parhaat joukkueet.
+/info - Näytä tietoja sinusta ja joukkueestasi.
+"""  # TODO: format admin  # TODO: add all implemented commands
 
 #TODO: good?
 RANK_MESSAGE = """
@@ -71,6 +74,20 @@ Sijoitus - joukkue (hyvinvointi-indeksi)
 *Pahoinvointisarja:*
 Sijoitus - joukkue (pahoinvointi-indeksi)
 {}
+"""
+
+#TODO: good?
+INFO_MESSAGE = """
+Tietoja käyttäjästä {username}:
+
+Joukkue: {team}
+Joukkueen jäsenet: {team_members}
+Joukkueen sijoitukset ja indeksit:
+Hyvinvointi: {team_rank_good} / {n_teams} ({good_index})
+Pahoinvointi: {team_rank_bad} / {n_teams} ({bad_index})
+
+Viimeksi lisäämäsi tapahtumat:
+{history_str}
 """
 
 """
