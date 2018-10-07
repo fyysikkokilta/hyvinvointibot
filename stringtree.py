@@ -65,9 +65,7 @@ STRING_TREE = {
                 }
             }
         },
-        #TODO
         "alkoholi" : {
-            #TODO: change this
             "msg": """
             Kuinka rankasti tuli otettua?
 
@@ -80,24 +78,23 @@ Bläkäri - "Vain Bläkkisvuohi muistaa."
             "errorMessage": BUTTONS_ERROR_MSG,
             "children": OrderedDict([
                 ("ei ollenkaan", {
-                    "msg": "Hienoa!", # TODO
+                    "msg": "Hienoa!",
                     "score_func": lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
-                #TODO: capitalization?
                 ("no blast", {
-                    "msg": "Toivottavasti pari lasillista rentoutti!", #TODO
+                    "msg": "Toivottavasti pari lasillista rentoutti!",
                     "score_func": lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
                 ("medium blast", {
-                    "msg": "Nää on näitä.", #TODO
+                    "msg": "Nää on näitä.",
                     "score_func": lambda h: ScoreObject(2, BAD_KEY, h),
                 }),
                 ("full blast", {
-                    "msg": "Hienosti. ", #TODO
+                    "msg": "Hienosti. ",
                     "score_func": lambda h: ScoreObject(3, BAD_KEY, h),
                 }),
                 ("bläkäri", {
-                    "msg": "Tsemppiä tähän päivään!", #TODO
+                    "msg": "Tsemppiä tähän päivään!",
                     "score_func": lambda h: ScoreObject(4, BAD_KEY, h),
                 }),
              ]),
@@ -135,23 +132,18 @@ Voit tulkita vaihtoehtoja seuraavasti:
 Runsaasti - Vapaa-aikaa oli tavallista enemmän ja se oli rentouttavaa.
 Sopivasti - Vapaa-aikaa oli sen verran kuin itse toivot jokaiselle päivälle.
 En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkautuisi.
-En lainkaan - Koko päivä meni hommissa D:
             """,
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("runsaasti", {
-                    "msg" : "Hienosti.",
+                    "msg" : "Mahtavaa!",
                     "score_func" : lambda h: ScoreObject(2, GOOD_KEY, h),
                 }),
                 ("sopivasti", {
-                    "msg" : "Hienosti",         #TODO
-                    "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
-                }),
-                ("ei riittävästi", {
-                    "msg" : "Hienosti",         #TODO
+                    "msg" : "Selvä homma.",
                     "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
-                ("en lainkaan", {
+                ("ei riittävästi", {
                     "msg" : "Muista ottaa aikaa myös itsellesi!",
                     "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
@@ -176,20 +168,20 @@ En lainkaan - Koko päivä meni hommissa D:
             ]),
         },
         "uni" : {
-            "msg" : """""Kuinka hyvin nukuit viime yönä?
+            "msg" : """Kuinka hyvin nukuit viime yönä?
 
-Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa vastauksissa huomioon myös unen laadun.
+Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa vastauksissasi huomioon myös unen laadun.
 
             """,
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("tosi hyvin", {
                     "msg" : "Mahtavaa!",
-                    "score_func" : lambda h: ScoreObject(2, GOOD_KEY, h),
-                }),
-                ("normaalisti", {
-                    "msg" : "Kiva!",
                     "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
+                }),
+                ("riittävästi", {
+                    "msg" : "Kiva!",
+                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
                 ("huonosti", {
                     "msg" : "Voi ei! Koita pian lyhentää univelkaa.",
