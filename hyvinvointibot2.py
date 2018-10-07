@@ -11,6 +11,7 @@ from stringtree import StringTreeParser, InvalidMessageError
 from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
 from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
 from stringtree import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
+from stringtree import NOT_PARTICIPANT_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
@@ -38,6 +39,7 @@ TODO: score functions
 TODO: back button to all 'button' conversations ~ done
 TODO: /lisaapaiva
 TODO: prevent duplicates of the event for the same day
+TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot
 TODO: /aboutme (?): show info about me (team, username, history, team members?)
     - team info (show members for a given team)
 TODO: hottiksen tapahtumat???
@@ -78,10 +80,13 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             #TODO: allow /rank command in group chat
             return
 
-        # we're in a private chat
-        #TODO: check that the sender has a username
-        #if "username" not in msg["from"]: ...
-        #TODO: check if the user is a participant from the database
+        ## at this point, we're in a private chat. ##
+
+        # check if the user is a participant (all participants should have a username)
+        if "username" not in msg["from"] or not dbm.is_participant(msg["from"]["username"]):
+            self.sender.sendMessage(NOT_PARTICIPANT_MESSAGE)
+            return
+
         command = None
         reply_markup = ReplyKeyboardRemove()
         reply_message_str = None
@@ -118,7 +123,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             #txt = command
 
         elif self.adding_event:
-            #TODO: check if the message was 'alkuun' etc
             if txt in [RETURN_MESSAGE.lower(), RETURN_BUTTON_MESSAGE.lower()]:
                 self.add_event_continue_conversation(msg, restart = True)
             else:

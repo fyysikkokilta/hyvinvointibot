@@ -18,6 +18,7 @@ class ScoreObject():
     """
     assert _type in [GOOD_KEY, BAD_KEY]
     value = float(value)
+    assert value >= 0.0
     self.type = _type
     self.value = value
     self.history = hist
