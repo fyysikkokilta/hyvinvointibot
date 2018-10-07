@@ -6,8 +6,6 @@ from collections import OrderedDict
 import scoring
 from scoring import GOOD_KEY, BAD_KEY, ScoreObject
 
-RETURN_BUTTON_ID = "return_choice"
-
 #####################
 # MESSAGE CONSTANTS #
 #####################
@@ -270,17 +268,18 @@ def verifyTree(tree, verbose = False):
     if tree != STRING_TREE:
         # every other node than the root should have 'msg'
         assert "msg" in tree, tree
-    #assert "errorMessage" in tree, tree # needed? -- TODO: this is needed only for nodes with children, move it accordingly.
 
     if "score_func" in tree:
       assert type(tree["score_func"]) == types.FunctionType
 
     if "children" in tree:
+        assert "errorMessage" in tree, tree
         for childName, child in tree["children"].items():
             verifyTree(child, verbose)
 
     elif "child" in tree:
-        assert "validation_func" in tree
+        assert "errorMessage" in tree, tree
+        assert "validation_func" in tree, tree
         verifyTree(tree["child"], verbose)
 
     else:
@@ -298,9 +297,8 @@ class StringTreeParser():
     def __init__(self):
         self.root = STRING_TREE
         self.current_message = STRING_TREE
-        #self.message_chain = []
 
-    def goForward(self, message_str): #, user): #TODO
+    def goForward(self, message_str):
         """
         Attempt to advance the conversation based on message_str. If the
         message is invalid, raise ValueError so the caller can send the
@@ -318,13 +316,9 @@ class StringTreeParser():
             children = node["children"]
 
             if message_str not in children:
-                #TODO: back button etc
-                #if message_str in [RETURN_BUTTON_MESSAGE, RETURN_MESSAGE]: self.reset(); return self.nextMessage #TODO: not good idea to reset here without notifying caller...
-                raise InvalidMessageError("invalid button") #TODO: should include errorMessage here?
+                raise InvalidMessageError("invalid button")
             else:
-                #self.message_chain.append(node)
                 self.current_message = children[message_str]
-                #return self.current_message #TODO: move this to 'ret'?
                 next_message = self.current_message
 
         elif "child" in node:
@@ -333,39 +327,16 @@ class StringTreeParser():
             if validated_value is None:
                 raise InvalidMessageError("invalid value")
             else:
-                #self.message_chain.append(node)
                 self.current_message = node["child"]
-                #return self.current_message
                 next_message = self.current_message
-
-        # was leaf, don't do anything? is it good that the caller handles no children?
-        if "score_func" in node:
-            print("TODO: score_func found, what do???") #TODO - or should be done by callee?
 
         return (next_message, validated_value)
 
-        return ret
-
-    #def goBack(self):
-    #    if self.message_chain:
-    #        self.current_message = self.message_chain.pop()
-    #    else:
-    #        raise NotImplementedError
-
     def reset(self):
         self.current_message = self.root
-        #self.message_chain = []
 
     def get_categories(self):
         return list(self.root["children"].keys())
-
-    #def go_to_category(self, category):
-    #    category = category.lower()
-    #    #if category not in self.root["children"]:
-    #    #    #TODO: raise valueError?
-
-    #    self.current_message = category
-
 
     def is_at_root(self):
         return self.current_message == self.root
