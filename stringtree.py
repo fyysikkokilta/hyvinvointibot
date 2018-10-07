@@ -114,7 +114,7 @@ Huonosti - Nälkä yllätti pahasti tai tuli mässäiltyä.
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("panostin tänään",  {
-                    "msg" : "Hienoa! Jatka samaan malliin.",          #TODO
+                    "msg" : "Hienoa! Jatka samaan malliin.",          # TODO
                     "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
                 }),
                 ("normipäivä", {
@@ -162,38 +162,42 @@ En lainkaan - Koko päivä meni hommissa D:
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("paljon", {
-                    "msg" : "Hienosti.",
-                    "score_func" : lambda h: ScoreObject(-2, BAD_KEY, h),
+                    "msg" : "Voi ei! Jos stressi jatkuu pitkään, pyri vähentämään stressiä aiheuttavia asioita.",
+                    "score_func" : lambda h: ScoreObject(2, BAD_KEY, h),
                 }),
                 ("vähän", {
-                    "msg" : "Hienosti.",
-                    "score_func" : lambda h: ScoreObject(-1, BAD_KEY, h),
+                    "msg" : "Toivottavasti stressitasot pysyvät kohtuullisina!",
+                    "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
-                ("ei lainkaan", {
-                    "msg" : "Hienosti.",
+                ("en lainkaan", {
+                    "msg" : "Mahtavaa!",
                     "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
             ]),
         },
         "uni" : {
-            "msg" : "Miten hyvin nukuit tänään?",
+            "msg" : """""Kuinka hyvin nukuit viime yönä?
+
+Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa vastauksissa huomioon myös unen laadun.
+
+            """,
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("tosi hyvin", {
-                    "msg" : "Hienosti.",
+                    "msg" : "Mahtavaa!",
                     "score_func" : lambda h: ScoreObject(2, GOOD_KEY, h),
                 }),
-                ("riittävästi", {
-                    "msg" : "Hienosti.",
+                ("normaalisti", {
+                    "msg" : "Kiva!",
                     "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
                 }),
                 ("huonosti", {
-                    "msg" : "Hienosti.",
-                    "score_func" : lambda h: ScoreObject(-1, BAD_KEY, h,)
+                    "msg" : "Voi ei! Koita pian lyhentää univelkaa.",
+                    "score_func" : lambda h: ScoreObject(1, BAD_KEY, h,)
                 }),
                 ("heräsin darrassa", {
-                    "msg" : "Hienosti.",
-                    "score_func" : lambda h: ScoreObject(-2, BAD_KEY, h),
+                    "msg" : "Kuten se on.",
+                    "score_func" : lambda h: ScoreObject(2, BAD_KEY, h),
                 }),
             ]),
         },
