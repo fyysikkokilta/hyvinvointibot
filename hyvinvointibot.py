@@ -43,11 +43,11 @@ TODOx: score functions -- done
 TODOx: back button to all 'button' conversations ~ done
 TODOx: prevent duplicates of the event for the same day ~ done
 TODOx: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings -- done
-TODO: /aboutme (?): show info about me (team, username, history, team members?)
-    - team info (show members for a given team), show ranking + index ?
+TODOx: /aboutme (?): show info about me (team, username, history, team members?) ~~ done
+    - team info (show members for a given team), show ranking + index ? -- done
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
-TODO: /info command - "/info alkoholi" - show info about alcohol (?)
+TODOx: /info command - "/info alkoholi" - show info about alcohol (?) -- not gonna do
 TODO: BOT_ADMIN constant
 """
 
