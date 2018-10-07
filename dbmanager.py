@@ -93,7 +93,7 @@ class DBManager():
                     "timestamp": time.time(),
                     }
 
-            from pprint import pprint; pprint(history_entry_dict)
+            from pprint import pprint; print("Inserting for user {}".format(username)); pprint(history_entry_dict)
 
             user_hist = user_data[HISTORY_KEY]
             user_hist.append(history_entry_dict)

@@ -54,7 +54,6 @@ Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stre
 
 Komennot
 
-
 /help - Tulosta ohje.
 /lisaa - Lisää pisteitä yhteen kategoriaan.
 /lisaapaiva - Lisää pisteitä kaikkiin kategorioihin kerralla.

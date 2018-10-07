@@ -1,5 +1,5 @@
 import sys
-import time
+import time, datetime
 import re
 from pprint import pprint
 import telepot
@@ -67,6 +67,10 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         self.state = STATE_NONE
         self.events_to_add_for_today = []
 
+    def on_close(self, x):
+        # does something have to be done here?
+        pass
+
     def on_chat_message(self, msg):
 
         content_type, chat_type, chat_id = telepot.glance(msg)
@@ -80,6 +84,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             return
 
         txt = msg["text"].strip().lower()
+
+        # some info for debugging
+        print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
+            txt,
+            msg["from"])
 
         if is_group:
             # see if the message is aimed at us
@@ -400,7 +409,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
     def send_rankings(self):
         team_points = dbm.get_team_points()
-        pprint(team_points)
+        #pprint(team_points)
         good_list = list(map(lambda x: [x[0], x[1][GOOD_KEY]], team_points.items()))
         bad_list = list(map(lambda x: [x[0], x[1][BAD_KEY]], team_points.items()))
 
