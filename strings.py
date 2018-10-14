@@ -183,7 +183,7 @@ Huonosti - Nälkä yllätti pahasti tai tuli mässäiltyä.
                 }),
                 ("normipäivä", {
                     "msg" : "Selvä homma.",        #TODO
-                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                    "score_func" : lambda h: ScoreObject(0.1, GOOD_KEY, h),
                 }),
                 ("huonosti", {
                     "msg" : "Sellaista sattuu!",        #TODO
@@ -210,14 +210,14 @@ En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkau
                     "msg" : "Selvä homma.",
                     "score_func" : lambda h: ScoreObject(0.2, GOOD_KEY, h),
                 }),
-                ("ei riittävästi", {
+                ("en riittävästi", {
                     "msg" : "Muista ottaa aikaa myös itsellesi!",
                     "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
             ]),
         },
         "stressi" : {
-            "msg" : "Kuinka stressaantunut olet ollut eilen?",
+            "msg" : "Kuinka stressaantunut olit eilen?",
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("paljon", {
@@ -251,7 +251,7 @@ Todella huonosti - alle 5 tuntia tai poikkeuksellisen huonolaatuiset yöunet
                 }),
                 ("riittävästi", {
                     "msg" : "Kiva!",
-                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                    "score_func" : lambda h: ScoreObject(0.2, GOOD_KEY, h),
                 }),
                 ("melko huonosti", {
                     "msg" : "Voi ei! Koita pian lyhentää univelkaa.",
