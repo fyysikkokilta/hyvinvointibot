@@ -21,7 +21,8 @@ from strings import RANK_MESSAGE, INFO_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
-from dbmanager import DBManager, TEAM_KEY
+from dbmanager import DBManager, TEAM_KEY, MEMBER_COUNT_KEY
+from utils import is_today
 
 # globals, might be defined in functions
 BOT_TIMEOUT = 5 * 60 # 5 minutes
@@ -49,6 +50,8 @@ TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
 TODOx: /info command - "/info alkoholi" - show info about alcohol (?) -- not gonna do
 TODO: BOT_ADMIN constant
+
+TODO: update scores only once per day
 
 bugs / feature requests / feedback:
 idea: /poista -> allow replacing entry directly
@@ -414,25 +417,37 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         indexed.sort(key = lambda x: -x[1] * m)
         return indexed
 
+    def point_dict_to_list(self, point_dict, key = GOOD_KEY):
+        # key: GOOD_KEY or BAD_KEY
+        scale = 10.0
+        sgn = 1 if key == GOOD_KEY else -1
+        def get_score(x):
+            return [x[0], sgn * x[1][key] / x[1][MEMBER_COUNT_KEY] * scale]
+
+        res = list(map(lambda x: get_score(x), point_dict.items()))
+        res.sort(key = lambda x: -x[1] * sgn)
+        return res
+
     def send_rankings(self):
-        team_points = dbm.get_team_points()
-        #pprint(team_points)
-        good_list = list(map(lambda x: [x[0], x[1][GOOD_KEY]], team_points.items()))
-        bad_list = list(map(lambda x: [x[0], x[1][BAD_KEY]], team_points.items()))
+        team_points, updated_timestamp = dbm.get_team_points()
+        good_list = self.point_dict_to_list(team_points, GOOD_KEY)
+        bad_list = self.point_dict_to_list(team_points, BAD_KEY)
 
         max_no_teams = 10
-        #pprint(calculate_indexes(good_list))
-        #pprint(calculate_indexes(bad_list, good = False))
         good_str = "\n".join([
             "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
-            for i, (tname, idx) in enumerate(self.calculate_indexes(good_list))
+            for i, (tname, idx) in enumerate(good_list)
             ][:max_no_teams])
         bad_str = "\n".join([
             "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
-            for i, (tname, idx) in enumerate(self.calculate_indexes(bad_list, False))
+            for i, (tname, idx) in enumerate(bad_list)
             ][:max_no_teams])
 
-        message_str = RANK_MESSAGE.format(good_str, bad_str)
+        updated_date_str = datetime.datetime.fromtimestamp(
+                updated_timestamp
+                ).strftime("%d.%m. %H:%M")
+
+        message_str = RANK_MESSAGE.format(good_str, bad_str, updated_date_str)
         self.sender.sendMessage(message_str,
                 reply_markup = ReplyKeyboardRemove(),
                 parse_mode = "markdown")
@@ -440,18 +455,13 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
     def send_info(self, username):
         user_data = dbm.get_user_data(username)
         todays_history = dbm.get_todays_history(username)
-        team_points = dbm.get_team_points()
+        team_points, updated_timestamp = dbm.get_team_points()
 
         team = user_data[TEAM_KEY]
         team_members = ["@" + m for m in dbm.get_team_members(team)]
         n_teams = len(team_points)
-        good_list = self.calculate_indexes(
-                list(map(lambda x: [x[0], x[1][GOOD_KEY]], team_points.items()))
-                )
-        bad_list = self.calculate_indexes(
-                list(map(lambda x: [x[0], x[1][BAD_KEY]], team_points.items())),
-                good = False,
-                )
+        good_list = self.point_dict_to_list(team_points, GOOD_KEY)
+        bad_list = self.point_dict_to_list(team_points, BAD_KEY)
         good_idx = next(t[1] for t in good_list if t[0] == team)
         bad_idx = next(t[1] for t in bad_list if t[0] == team)
 
@@ -496,6 +506,9 @@ def main():
     print('Listening @{} ...'.format(bot.getMe()["username"]))
 
     while 1:
+        _, points_last_updated = dbm.get_team_points()
+        if not is_today(points_last_updated):
+            dbm.update_team_points()
         time.sleep(10)
 
 if __name__ == "__main__":

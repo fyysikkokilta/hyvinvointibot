@@ -64,12 +64,14 @@ RANK_MESSAGE = """
 *Parhaat joukkueet:*
 
 *Hyvinvointisarja:*
-Sijoitus - joukkue (hyvinvointi-indeksi)
+Sijoitus - joukkue (hyvinvointipisteet)
 {}
 
 *Pahoinvointisarja:*
-Sijoitus - joukkue (pahoinvointi-indeksi)
+Sijoitus - joukkue (pahoinvointipisteet)
 {}
+
+Pisteet päivitetty {}.
 """
 
 #TODO: good?
@@ -78,7 +80,7 @@ Tietoja käyttäjästä {username}:
 
 Joukkue: {team}
 Joukkueen jäsenet: {team_members}
-Joukkueen sijoitukset ja indeksit:
+Joukkueen sijoitukset ja pisteet:
 Hyvinvointi: {team_rank_good} / {n_teams} ({good_index:.2f})
 Pahoinvointi: {team_rank_bad} / {n_teams} ({bad_index:.2f})
 
