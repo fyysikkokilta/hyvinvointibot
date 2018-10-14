@@ -1,0 +1,6 @@
+# This file should contain the teams in the following format:
+# team name; user1; user2; user3; user_n
+# where user_i are the telegram usernames of the team members (without @).
+# Empty rows and rows starting with '#' are ignored.
+# The teams can be inserted into the database with
+# $ python3 dbmanager.py teams.txt

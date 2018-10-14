@@ -7,17 +7,17 @@ from telepot.loop import MessageLoop
 from telepot.delegate import per_chat_id, create_open, pave_event_space
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from stringtree import StringTreeParser, InvalidMessageError
-from stringtree import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
-from stringtree import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
-from stringtree import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
-from stringtree import USER_HISTORY_MESSAGE, NO_USER_HISTORY_MESSAGE
-from stringtree import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_MESSAGE
-from stringtree import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
-from stringtree import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
-from stringtree import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
-from stringtree import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
-from stringtree import RANK_MESSAGE, INFO_MESSAGE
+from strings import StringTreeParser, InvalidMessageError
+from strings import GROUP_REPLY_MESSAGE, DID_NOT_UNDERSTAND_MESSAGE
+from strings import START_ADD_EVENT_MESSAGE, UNKNOWN_COMMAND_MESSAGE
+from strings import HELP_MESSAGE, RETURN_BUTTON_MESSAGE, RETURN_MESSAGE
+from strings import USER_HISTORY_MESSAGE, NO_USER_HISTORY_MESSAGE
+from strings import USER_HISTORY_COUNT_ERROR_MESSAGE, ITEM_REMOVED_SUCCESS_MESSAGE
+from strings import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
+from strings import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
+from strings import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
+from strings import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
+from strings import RANK_MESSAGE, INFO_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
@@ -42,13 +42,18 @@ TODOx: all conversation paths -- done
 TODOx: score functions -- done
 TODOx: back button to all 'button' conversations ~ done
 TODOx: prevent duplicates of the event for the same day ~ done
-TODO: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings
-TODO: /aboutme (?): show info about me (team, username, history, team members?)
-    - team info (show members for a given team), show ranking + index ?
+TODOx: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings -- done
+TODOx: /aboutme (?): show info about me (team, username, history, team members?) ~~ done
+    - team info (show members for a given team), show ranking + index ? -- done
 TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
-TODO: /info command - "/info alkoholi" - show info about alcohol (?)
+TODOx: /info command - "/info alkoholi" - show info about alcohol (?) -- not gonna do
 TODO: BOT_ADMIN constant
+
+bugs / feature requests / feedback:
+idea: /poista -> allow replacing entry directly
+idea: update /rank results only once per day (how?)
+idea/feedback: different message for different values of liikunta numeric value?
 """
 
 dbm = DBManager()
@@ -86,9 +91,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         txt = msg["text"].strip().lower()
 
         # some info for debugging
-        print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
-            txt,
-            msg["from"])
+        #if "username" in msg["from"] and msg["from"]["username"].lower() == "target_username":
+        if True:
+            print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
+                txt,
+                msg["from"])
 
         if is_group:
             # see if the message is aimed at us
@@ -202,11 +209,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                             start_from = next_cat)
 
             else:
-                self.add_event_continue_conversation(msg) # add last event
-                self.sender.sendMessage(ADDING_MANY_FINISHED_MESSAGE,
-                        reply_markup = ReplyKeyboardRemove()
-                        )
-                end_conversation = True
+                if self.add_event_continue_conversation(msg): # add last event
+                    self.sender.sendMessage(ADDING_MANY_FINISHED_MESSAGE,
+                            reply_markup = ReplyKeyboardRemove()
+                            )
+                    end_conversation = True
 
         elif self.state == STATE_REMOVING_EVENT:
             end_conversation = self.remove_item_continue_conversation(msg, 1)
@@ -417,11 +424,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         #pprint(calculate_indexes(good_list))
         #pprint(calculate_indexes(bad_list, good = False))
         good_str = "\n".join([
-            "*{}* - {} ({})".format(i + 1, tname, idx)
+            "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
             for i, (tname, idx) in enumerate(self.calculate_indexes(good_list))
             ][:max_no_teams])
         bad_str = "\n".join([
-            "*{}* - {} ({})".format(i + 1, tname, idx)
+            "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
             for i, (tname, idx) in enumerate(self.calculate_indexes(bad_list, False))
             ][:max_no_teams])
 
