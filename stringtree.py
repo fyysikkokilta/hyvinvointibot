@@ -49,7 +49,7 @@ Kokeile jotakin toista kategoriaa.
 
 HELP_MESSAGE = """Hyvinvointibotin avulla voit syöttää pisteitä itsellesi ja joukkueellesi Hottiksen hyvinvointikilpailussa. Syöttääksesi pisteitä sinun pitää olla kilpailuun ilmoittautuneen joukkueen jäsen. Jos haluat osallistua kilpailuun jälkikäteen, ota yhteyttä käyttäjään @martong.
 
-Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stressi ja uni. Jokaiseen kategoriaan voi lisätä kerran päivässä pisteitä. Eri vastauksista voit saada joko hyvinvointi-, tai pahoinvointipisteitä. Komennolla /lisaa voit lisätä yhteen kategoriaan pisteitä. Komennolla /lisaapaiva voit lisätä päivän pisteet kaikkiin kategorioihin. Komennolla /poista voit poistaa saman päivänä lisäämiäsi pisteitä.
+Pisteitä voi kerätä kategorioista liikunta, alkoholi, ruoka, vapaa-aika, stressi ja uni. Jokaiseen kategoriaan voi lisätä kerran päivässä pisteitä, ja annetut vastaukset tulisi antaa edellisen päivän perusteella. Eri vastauksista voit saada joko hyvinvointi-, tai pahoinvointipisteitä. Komennolla /lisaa voit lisätä yhteen kategoriaan pisteitä. Komennolla /lisaapaiva voit lisätä päivän pisteet kaikkiin kategorioihin. Komennolla /poista voit poistaa saman päivänä lisäämiäsi pisteitä.
 
 
 Komennot
@@ -118,15 +118,19 @@ STRING_TREE = {
     "children" : {
         #TODO: change to OrderedDict?
         "liikunta" : {
-            "msg" : "Asteikolla 0-5, kuinka intensiivistä liikuntaa harrastit?",
+            "msg" : """Asteikolla 0-5, kuinka intensiivistä liikuntaa harrastit eilen?
+
+Intensiivisyyden tasoissa 1 on reipas kävely, 3 runsaasti hengästyttävä liikunta ja 5 full HD body attack.""",
             "errorMessage" : "Anna vastaukseksi numero välillä 0-5.", #TODO: add 'peruuta kirjoittamalla alkuun' tms
             "validation_func": scoring.liikunta_validate_intensity,
             "child" : {
-                "msg" : "Kuinka kauan liikunta kesti tunteina? (max X h)",
-                "errorMessage" : "Korkein hyväksytty tuntimäärä on X tuntia.",
+                "msg" : """Kuinka kauan liikunta kesti tunteina? (max 12 h)
+
+Eri aikoihin tehtyjä suorituksia voi summata yhteen, mutta yksittäisten suoritusten tulee olla kestoltaan vähintään 15 minuuttia.""",
+                "errorMessage" : "Korkein hyväksytty tuntimäärä on 12 tuntia.",
                 "validation_func": scoring.liikunta_validate_duration,
                 "child" : {
-                    "msg" : "Hieno homma, jatka samaan malliin!", #TODO: good?
+                    "msg" : "Jee jee!", #TODO: good?
                     "score_func": scoring.liikunta_score
                 }
             }
@@ -167,7 +171,7 @@ Bläkäri - "Vain Bläkkisvuohi muistaa."
         },
         "ruoka" : {
             "msg" : """
-            Miten hyvin söit tänään?
+            Miten hyvin söit eilen?
 
 Voit tulkita vaihtoehtoja seuraavasti:
 Tavallista paremmin - Laitoit esimerkiksi itse ruokaa tai muuten kiinnitit huomiota aterioihisi.
@@ -192,7 +196,7 @@ Huonosti - Nälkä yllätti pahasti tai tuli mässäiltyä.
         },
         "vapaa-aika" : {
             "msg" : """
-            Kuinka paljon vietit vapaa-aikaa tänään?
+            Kuinka paljon vietit vapaa-aikaa eilen?
 
 Voit tulkita vaihtoehtoja seuraavasti:
 Runsaasti - Vapaa-aikaa oli tavallista enemmän ja se oli rentouttavaa.
@@ -203,11 +207,11 @@ En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkau
             "children" : OrderedDict([
                 ("runsaasti", {
                     "msg" : "Mahtavaa!",
-                    "score_func" : lambda h: ScoreObject(2, GOOD_KEY, h),
+                    "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
                 }),
                 ("sopivasti", {
                     "msg" : "Selvä homma.",
-                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                    "score_func" : lambda h: ScoreObject(0.2, GOOD_KEY, h),
                 }),
                 ("ei riittävästi", {
                     "msg" : "Muista ottaa aikaa myös itsellesi!",
@@ -216,7 +220,7 @@ En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkau
             ]),
         },
         "stressi" : {
-            "msg" : "Kuinka stressaantunut olet ollut tänään?",
+            "msg" : "Kuinka stressaantunut olet ollut eilen?",
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("paljon", {
@@ -229,14 +233,19 @@ En riittävästi - Vapaa-aikaa ei ollut tarpeeksi, jotta päivän stressi purkau
                 }),
                 ("en lainkaan", {
                     "msg" : "Mahtavaa!",
-                    "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
+                    "score_func" : lambda h: ScoreObject(0.1, GOOD_KEY, h),
                 }),
             ]),
         },
         "uni" : {
             "msg" : """Kuinka hyvin nukuit viime yönä?
 
-Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa vastauksissasi huomioon myös unen laadun.""",
+Voit tulkita vastausvaihtoehtoja esimerkiksi seuraavasti:
+Tosi hyvin - yli kahdeksan tuntia tai poikkeuksellisen laadukasta unta
+Riittävästi - 7-8 tuntia tai muuten sinulle riittoisat yöunet
+Melko huonosti - alle 7 tuntia tai muuten huonolaatuiset yöunet
+Todella huonosti - alle 5 tuntia tai poikkeuksellisen huonolaatuiset yöunet
+""",
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
                 ("tosi hyvin", {
@@ -247,13 +256,13 @@ Aikuinen tarvitsee yössä keskimäärin 7-9 tuntia unta. Voit kuitenkin ottaa v
                     "msg" : "Kiva!",
                     "score_func" : lambda h: ScoreObject(0, GOOD_KEY, h),
                 }),
-                ("huonosti", {
+                ("melko huonosti", {
                     "msg" : "Voi ei! Koita pian lyhentää univelkaa.",
-                    "score_func" : lambda h: ScoreObject(1, BAD_KEY, h,)
+                    "score_func" : lambda h: ScoreObject(0.5, BAD_KEY, h,)
                 }),
-                ("heräsin darrassa", {
-                    "msg" : "Kuten se on.",
-                    "score_func" : lambda h: ScoreObject(2, BAD_KEY, h),
+                ("todella huonosti", {
+                    "msg" : "Voi ei! Koita pian lyhentää univelkaa.",
+                    "score_func" : lambda h: ScoreObject(1, BAD_KEY, h),
                 }),
             ]),
         },
