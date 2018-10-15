@@ -178,10 +178,14 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 end_conversation = True
 
             elif command == "/help" or command == "/start":
-                self.sender.sendMessage(HELP_MESSAGE)
+                self.sender.sendMessage(HELP_MESSAGE,
+                        reply_markup = ReplyKeyboardRemove()
+                        )
 
             else:
-                self.sender.sendMessage(UNKNOWN_COMMAND_MESSAGE)
+                self.sender.sendMessage(UNKNOWN_COMMAND_MESSAGE,
+                        reply_markup = ReplyKeyboardRemove()
+                        )
 
         elif self.state == STATE_ADDING_EVENT:
             if txt in [RETURN_MESSAGE.lower(), RETURN_BUTTON_MESSAGE.lower()]:
@@ -484,7 +488,9 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 history_str = self.format_user_history(todays_history),
                 )
         #print("send_info(): ", message_str)
-        self.sender.sendMessage(message_str) #, parse_mode = "markdown")
+        self.sender.sendMessage(message_str
+                reply_markup = ReplyKeyboardRemove()
+                ) #, parse_mode = "markdown")
 
 
 def flush_messages(bot):

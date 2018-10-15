@@ -179,7 +179,7 @@ Huonosti - Nälkä yllätti pahasti tai tuli mässäiltyä.
             """,
             "errorMessage" : BUTTONS_ERROR_MSG,
             "children" : OrderedDict([
-                ("panostin tänään",  {
+                ("tavallista paremmin",  {
                     "msg" : "Hienoa! Jatka samaan malliin.",          # TODO
                     "score_func" : lambda h: ScoreObject(1, GOOD_KEY, h),
                 }),
@@ -285,6 +285,7 @@ def verifyTree(tree, verbose = False):
     if "children" in tree:
         assert "errorMessage" in tree, tree
         for childName, child in tree["children"].items():
+            assert childName == childName.lower(), childName
             verifyTree(child, verbose)
 
     elif "child" in tree:
