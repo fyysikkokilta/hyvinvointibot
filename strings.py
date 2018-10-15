@@ -30,11 +30,11 @@ USER_HISTORY_COUNT_ERROR_MESSAGE = "Anna kokonaisluku välillä 1-{}"
 ITEM_REMOVED_SUCCESS_MESSAGE = "Tapahtuma poistettiin onnistuneesti."
 
 ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE = """
-Olet jo lisännyt kaikki mahdolliset tapahtumat tälle päivälle. Hienoa!
+Olet jo lisännyt kaikki mahdolliset tapahtumat eiliselle. Hienoa!
 
 Voit poistaa lisäämiäsi tapahtumia komennolla /poista.
 """ #TODO: good?
-ADDING_MANY_START_MESSAGE = "Lisätään jäljellä olevat kategoriat tälle päivälle."
+ADDING_MANY_START_MESSAGE = "Lisätään jäljellä olevat kategoriat eiliselle."
 ADDING_MANY_FINISHED_MESSAGE = "Kaikki päivän tapahtumat on nyt lisätty." #TODO: good?
 ADDING_MANY_CANCEL_MESSAGE = "Lopeta"
 ADDING_MANY_CANCELING_MESSAGE = "Selvä."
