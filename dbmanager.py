@@ -29,6 +29,7 @@ def parse_teams_and_add_to_db(filename):
     with open(filename, "r") as f:
         print("Adding participants to database {}".format(DATABASE_NAME))
         team_names = []
+        count = 0
         for line in f.readlines():
             line = line.strip()
             if line and line.startswith("#"):
@@ -52,11 +53,13 @@ def parse_teams_and_add_to_db(filename):
                                 HISTORY_KEY : [],
                                 },
                             )
+                    count += 1
                     print("added: {} - {}".format(team_name, username))
 
                 except DuplicateKeyError:
                     print("already exists: {} - {}".format(team_name, username))
 
+        print("added {} new participants".format(count))
 
 class DBManager():
     def __init__(self):
