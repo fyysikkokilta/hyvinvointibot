@@ -29,6 +29,9 @@ BOT_TIMEOUT = 5 * 60 # 5 minutes
 BOT_TOKEN = None
 BOT_USERNAME = None
 
+# update points every this many hours
+UPDATE_POINTS_INTERVAL_H = 4
+
 #TODO: here's a list of larger scale TODO's / goals
 """
 TODOx: database
@@ -94,6 +97,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         # some info for debugging
         #if "username" in msg["from"] and msg["from"]["username"].lower() == "target_username":
+        #if "/info" in txt:
         if True:
             print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
                 txt,
@@ -433,7 +437,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         good_list = self.point_dict_to_list(team_points, GOOD_KEY)
         bad_list = self.point_dict_to_list(team_points, BAD_KEY)
 
-        max_no_teams = 10
+        max_no_teams = None
         good_str = "\n".join([
             "*{}* - {} ({:.2f})".format(i + 1, tname, idx)
             for i, (tname, idx) in enumerate(good_list)
@@ -479,8 +483,8 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 n_teams = n_teams,
                 history_str = self.format_user_history(todays_history),
                 )
-        self.sender.sendMessage(message_str,
-               parse_mode = "markdown")
+        #print("send_info(): ", message_str)
+        self.sender.sendMessage(message_str) #, parse_mode = "markdown")
 
 
 def flush_messages(bot):
@@ -507,7 +511,10 @@ def main():
 
     while 1:
         _, points_last_updated = dbm.get_team_points()
-        if not is_today(points_last_updated):
+        t = datetime.datetime.fromtimestamp(time.time())
+        t_prev = datetime.datetime.fromtimestamp(points_last_updated)
+        #if not is_today(points_last_updated):
+        if t.hour != t_prev.hour and (t.hour % UPDATE_POINTS_INTERVAL_H) == 0:
             dbm.update_team_points()
         time.sleep(10)
 
