@@ -10,7 +10,7 @@ from utils import is_today
 
 from scoring import GOOD_KEY, BAD_KEY
 
-DATABASE_NAME = "hyvinvointi-2018-test" #TODO: remove -test
+DATABASE_NAME = "hyvinvointi-2018"
 HISTORY_KEY = "history"
 USERNAME_KEY = "username"
 TEAM_KEY = "team"
