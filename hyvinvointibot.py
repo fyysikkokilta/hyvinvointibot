@@ -50,8 +50,7 @@ TODO: hottiksen tapahtumat???
     - only possible to add them after the event?
 TODOx: /info command - "/info alkoholi" - show info about alcohol (?) -- not gonna do
 TODO: BOT_ADMIN constant
-
-TODO: update scores only once per day
+TODOx: update scores only once per day ~~ done
 
 bugs / feature requests / feedback:
 idea: /poista -> allow replacing entry directly
@@ -128,7 +127,8 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
         username = msg["from"]["username"]
         command = None
-        reply_markup = ReplyKeyboardRemove()
+        #reply_markup = ReplyKeyboardRemove()
+        reply_markup = None
         reply_message_str = None
         end_conversation = False
         if txt.startswith("/"): #TODO: consider using telepot features, msg["entities"] has 'bot_command'
@@ -147,7 +147,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
                 if not to_add:
                     self.sender.sendMessage(ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE,
-                            reply_markup = reply_markup)
+                            reply_markup = ReplyKeyboardRemove())
 
                     end_conversation = True
 
@@ -247,7 +247,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
             True if the conversation has ended, False otherwise
         """
 
-        reply_markup = ReplyKeyboardRemove()
+        reply_markup = None #ReplyKeyboardRemove()
         reply_message_str = None
         end_conversation = False
 
