@@ -3,16 +3,18 @@ DBManager is a thin wrapper around PyMongo
 """
 
 import time
+import datetime
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from utils import is_today
 
 from scoring import GOOD_KEY, BAD_KEY
 
-DATABASE_NAME = "hyvinvointi-2018-test" #TODO: remove -test
+DATABASE_NAME = "hyvinvointi-2018"
 HISTORY_KEY = "history"
 USERNAME_KEY = "username"
 TEAM_KEY = "team"
+MEMBER_COUNT_KEY = "n_members"
 
 def parse_teams_and_add_to_db(filename):
     # read teams from a text file and store them in the database
@@ -61,6 +63,7 @@ class DBManager():
         self.connection = MongoClient()
         self.db = self.connection[DATABASE_NAME]
         self.participants = self.db.participants
+        self.team_points = self.db.team_points
 
     def get_user_data(self, username):
         username = username.lower()
@@ -191,21 +194,38 @@ class DBManager():
         """
         Returns a dict which contains the good and bad points of each team:
         { teamName: {"good": ..., "bad": ... }, ... }
+        and the unix timestamp of latest score update
         """
+
+        team_points = list(self.team_points.find())
+        ret = {}
+        for p in team_points:
+            team = p["_id"]
+            ret[team] = {
+                    GOOD_KEY : p[GOOD_KEY], BAD_KEY : p[BAD_KEY],
+                    MEMBER_COUNT_KEY: p[MEMBER_COUNT_KEY],
+                    }
+
+        return ret, team_points[0]["timestamp"]
+
+    def update_team_points(self):
+        print(datetime.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
+                "DBManager: updating points")
+
         aggregate_result = self.participants.aggregate([{
                 "$group": {
                     "_id": "$" + TEAM_KEY,
                     GOOD_KEY: {"$sum": "$" + GOOD_KEY},
                     BAD_KEY: {"$sum": "$" + BAD_KEY},
+                    MEMBER_COUNT_KEY: {"$sum": 1},
                 }
             }])
 
         ret = {}
+        t = time.time()
         for res in aggregate_result:
-            team = res["_id"]
-            ret[team] = {GOOD_KEY : res[GOOD_KEY], BAD_KEY : res[BAD_KEY]}
-
-        return ret
+            res["timestamp"] = t # very dirty
+            self.team_points.update_one({"_id": res["_id"]}, {"$set": res}, upsert = True)
 
 if __name__ == "__main__":
     import sys
