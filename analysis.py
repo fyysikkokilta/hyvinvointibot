@@ -40,7 +40,7 @@ if not analysis_done or True:
 
   scores = list()
 
-  #for p in participants.find():       #cursor
+  #for p in participants.find(): # dbm version
   for p in participants:
       username = p["username"]
       good = 0
@@ -61,7 +61,10 @@ if not analysis_done or True:
   stress = defaultdict(lambda: defaultdict(int))
   alcohol = defaultdict(lambda: defaultdict(int))
 
-  #for p in participants.find():
+  sports_hours = []
+  n_well_slept_nights = 0
+
+  #for p in participants.find(): # dbm version
   for p in participants:
       h = p["history"]
       #h_stress = [x for x in h if x["category"] == "stressi"]
@@ -71,6 +74,15 @@ if not analysis_done or True:
           stress[dow][entry["params"][0]] += 1
         elif entry["category"] == "alkoholi":
           alcohol[dow][entry["params"][0]] += 1
+        elif entry["category"] == "liikunta" and entry["params"][0] > 0:
+          #total_sports_hours += entry["params"][1]
+          sports_hours.append(entry["params"][1])
+        elif entry["category"] == "uni" and entry["params"][0] == "tosi hyvin":
+          n_well_slept_nights += 1
+
+  n_participants = len(participants)
+  sports_hours = np.array(sports_hours)
+  total_sports_hours = sum(sports_hours)
 
   analysis_done = True
 
@@ -137,6 +149,11 @@ def plot_alcohol_multihist():
   ax.set_title("Alkoholimerkinnät eri viikonpäiville")
 
 #plot_stress_multihist()
-plot_alcohol_multihist()
+#plot_alcohol_multihist()
+
+# mielen kiintoisia faktoja
+print("total sports hours: {} (variance {})".format(total_sports_hours, np.var(sports_hours)))
+print("total blackouts: {}".format(sum([x["bläkäri"] for x in alcohol.values()])))
+print("no. of well slept nights: {}".format(n_well_slept_nights))
 
 plt.show(block = not ipython)
