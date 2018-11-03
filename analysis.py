@@ -1,5 +1,9 @@
 import dbmanager
 from pprint import pprint
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime 
+
 
 dbm = dbmanager.DBManager()
 
@@ -19,13 +23,14 @@ dbm = dbmanager.DBManager()
 
 participants = dbm.participants
 
-l = list()
+scores = list()
 
 for p in participants.find():       #cursor
     username = p["username"]
     good = 0
     bad = 0
-    for h in dbm.get_history(username):
+    #for h in dbm.get_history(username):
+    for h in p["history"]:
         if h["type"] == "good":
             good += h["value"]
         elif h["type"] == "bad":
@@ -35,8 +40,12 @@ for p in participants.find():       #cursor
     # print(good)
     # print(bad)
 
-    l.append((username, good, bad))
+    scores.append((username, good, bad))
 
-l = sorted(l, key=lambda name: -name[1]).map(lambda user: (user[0], user[1]+user[2]))
-map(lambda user: (user[0], user[1]+user[2]), l)
-pprint(l)
+#l = sorted(l, key=lambda name: -name[1]).map(lambda user: (user[0], user[1]+user[2]))
+
+stress = []
+
+for p in participants.find():
+    h = p["history"]
+    h_stress = [x for x in h if x["category"] == "stressi"]
