@@ -59,14 +59,18 @@ if not analysis_done or True:
       scores.append((username, good, bad))
 
   stress = defaultdict(lambda: defaultdict(int))
+  alcohol = defaultdict(lambda: defaultdict(int))
 
   #for p in participants.find():
   for p in participants:
       h = p["history"]
-      h_stress = [x for x in h if x["category"] == "stressi"]
-      for entry in h_stress:
+      #h_stress = [x for x in h if x["category"] == "stressi"]
+      for entry in h:
         dow = (datetime.datetime.fromtimestamp(entry["timestamp"]).weekday() - 1) % 7
-        stress[dow][entry["params"][0]] += 1
+        if entry["category"] == "stressi":
+          stress[dow][entry["params"][0]] += 1
+        elif entry["category"] == "alkoholi":
+          alcohol[dow][entry["params"][0]] += 1
 
   analysis_done = True
 
@@ -100,6 +104,39 @@ def plot_stress_multihist():
 
   ax.set_title("Stressimerkinnät eri viikonpäiville")
 
-plot_stress_multihist()
+def plot_alcohol_multihist():
+  fig = plt.figure()
+  ax = fig.gca()
+
+  alc1 = np.array([x["no blast"] for x in alcohol.values()])
+  alc2 = np.array([x["medium blast"] for x in alcohol.values()])
+  alc3 = np.array([x["full blast"] for x in alcohol.values()])
+  alc4 = np.array([x["bläkäri"] for x in alcohol.values()])
+  days = np.arange(7) * 2
+
+  days_labels = ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"]
+  alcohol_labels = ['No blast', 'Medium blast', "Full blast", 'Bläkäri']
+
+  bar_w = 0.4
+
+  ax.bar(days - 1.5*bar_w, alc1, width = bar_w, label = alcohol_labels[0], align = "center")
+  ax.bar(days - 0.5*bar_w, alc2, width = bar_w, label = alcohol_labels[1], align = "center")
+  ax.bar(days + 0.5*bar_w, alc3, width = bar_w, label = alcohol_labels[2], align = "center")
+  ax.bar(days + 1.5*bar_w, alc4, width = bar_w, label = alcohol_labels[3], align = "center")
+  #ax.bar(days        , stress2 + stress3, width = bar_w)
+
+  ax.set_ylabel("Merkintöjen lkm")
+
+  ax.set_xticks(days)
+  ax.set_xticklabels(days_labels)
+  #ax.set_ylim([0, 120])
+
+  leg = ax.legend()
+  leg.set_draggable(True)
+
+  ax.set_title("Alkoholimerkinnät eri viikonpäiville")
+
+#plot_stress_multihist()
+plot_alcohol_multihist()
 
 plt.show(block = not ipython)
