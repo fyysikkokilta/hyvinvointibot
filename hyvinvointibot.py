@@ -25,7 +25,7 @@ from dbmanager import DBManager, TEAM_KEY, MEMBER_COUNT_KEY
 from utils import is_today
 
 # globals, might be defined in functions
-BOT_TIMEOUT = 5 * 60 # 5 minutes
+BOT_TIMEOUT = 30 * 60 # 5 minutes
 BOT_TOKEN = None
 BOT_USERNAME = None
 
@@ -488,7 +488,7 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
                 history_str = self.format_user_history(todays_history),
                 )
         #print("send_info(): ", message_str)
-        self.sender.sendMessage(message_str
+        self.sender.sendMessage(message_str,
                 reply_markup = ReplyKeyboardRemove()
                 ) #, parse_mode = "markdown")
 
