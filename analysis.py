@@ -299,9 +299,10 @@ print("full blast count: {}".format(sum([x["full blast"] for x in alcohol.values
 print("no blast count: {}".format(sum([x["no blast"] for x in alcohol.values()])))
 print("ei ollenkaan count: {}".format(sum([x["ei ollenkaan!"] for x in alcohol.values()])))
 print("no. of well slept nights: {}".format(n_well_slept_nights))
-print("most dokattu:"); pprint(most_dokattu)
-print("least dokattu:"); pprint(least_dokattu)
-print("best food:"); pprint(best_food)
+print("\nmost dokattu:"); pprint(most_dokattu)
+print("\nleast dokattu:"); pprint(least_dokattu)
+print("\npahimmat tissuttelijat:"); pprint(max(teams_alcohol.items(), key = lambda x: x[1]["no blast"]))
+print("\nbest food:"); pprint(best_food)
 
 plt.show(block = not ipython)
 
