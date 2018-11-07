@@ -108,8 +108,8 @@ if not analysis_done or True:
           teams_food[team][entry["params"][0]] += 1
 
         kind = entry["type"]
-        team_scores[t][team].append(entry["value"])
-        team_scores_timestamps[t][team].append(d)
+        team_scores[kind][team].append(entry["value"])
+        team_scores_timestamps[kind][team].append(d)
 
         uname = p["username"]
         teams[team].add(uname)
