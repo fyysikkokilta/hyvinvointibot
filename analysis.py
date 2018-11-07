@@ -12,6 +12,11 @@ Plot/statistics ideas:
   - -||- of alkoholi as a function of weekday
   - cumulative hyvinvointi, pahoinvointi, hyv - pah points
   - average hours of liikunta / user
+
+ (- paras yksittäinen suoritus liikuntatunnit yhteenlaskettuna)
+  - jokaiselle joukkueelle hyvin/pahoinvoivin yksittäinen päivä
+
+  - stressaantunein / dokatuin / parhaiten syönyt / parhaiten nukkunut tms tiimi
 """
 
 plt.close("all")
@@ -58,8 +63,14 @@ if not analysis_done or True:
 
       scores.append((username, good, bad))
 
+  team_scores = {"good": defaultdict(list), "bad": defaultdict(list) }
+  team_scores_timestamps = {"good": defaultdict(list), "bad": defaultdict(list) }
+  teams = defaultdict(set)
+
   stress = defaultdict(lambda: defaultdict(int))
   alcohol = defaultdict(lambda: defaultdict(int))
+  teams_alcohol = defaultdict(lambda: defaultdict(int))
+  teams_food = defaultdict(lambda: defaultdict(int))
 
   sports_hours = []
   n_well_slept_nights = 0
@@ -68,25 +79,70 @@ if not analysis_done or True:
   for p in participants:
       h = p["history"]
       #h_stress = [x for x in h if x["category"] == "stressi"]
+
+      team = p["team"]
+
       for entry in h:
-        dow = (datetime.datetime.fromtimestamp(entry["timestamp"]).weekday() - 1) % 7
+        d = datetime.datetime.fromtimestamp(entry["timestamp"]).date()
+        dow = (d.weekday() - 1) % 7
         if entry["category"] == "stressi":
           stress[dow][entry["params"][0]] += 1
         elif entry["category"] == "alkoholi":
-          alcohol[dow][entry["params"][0]] += 1
+
+          blast = entry["params"][0]
+          alcohol[dow][blast] += 1
+
+          teams_alcohol[team][blast] += 1
+
         elif entry["category"] == "liikunta" and entry["params"][0] > 0:
           #total_sports_hours += entry["params"][1]
           sports_hours.append(entry["params"][1])
         elif entry["category"] == "uni" and entry["params"][0] == "tosi hyvin":
           n_well_slept_nights += 1
 
+        elif entry["category"] == "ruoka":
+          teams_food[team][entry["params"][0]] += 1
+
+        t = entry["type"]
+        team_scores[t][team].append(entry["value"])
+        team_scores_timestamps[t][team].append(d)
+
+        teams[team].add(p["username"])
+
   n_participants = len(participants)
+  team_sizes = dict(map(lambda x: (x[0], len(x[1])), teams.items()))
+
   sports_hours = np.array(sports_hours)
   total_sports_hours = sum(sports_hours)
+
+  alcohol_weights = {
+      "ei ollenkaan!" : 0, "no blast": 1, "medium blast": 2,
+      "full blast": 3, "bläkäri": 4
+      }
+
+  most_dokattu = max(teams_alcohol.items(),
+      key = lambda x: sum([alcohol_weights[y[0]] * y[1] for y in x[1].items()]) / team_sizes[x[0]]
+      )
+
+  least_dokattu = max(teams_alcohol.items(),
+      key = lambda x: x[1]["ei ollenkaan!"] / team_sizes[x[0]]
+      )
+
+  food_weights = {
+      "huonosti": 0,
+      "normipäivä": 0,
+      "tavallista paremmin": 1,
+      "panostin tänään": 2,
+      }
+
+  best_food = max(teams_food.items(),
+      key = lambda x: sum([food_weights[y[0]] * y[1] for y in x[1].items()]) / team_sizes[x[0]]
+      )
 
   analysis_done = True
 
 def plot_stress_multihist():
+  #{{{
   fig = plt.figure()
   ax = fig.gca()
 
@@ -115,8 +171,10 @@ def plot_stress_multihist():
   leg.set_draggable(True)
 
   ax.set_title("Stressimerkinnät eri viikonpäiville")
+  #}}}
 
 def plot_alcohol_multihist():
+  #{{{
   fig = plt.figure()
   ax = fig.gca()
 
@@ -147,13 +205,52 @@ def plot_alcohol_multihist():
   leg.set_draggable(True)
 
   ax.set_title("Alkoholimerkinnät eri viikonpäiville")
+  #}}}
+
+def plot_team_cumulative_points():
+  #{{{
+
+  fig = plt.figure()
+  ax = fig.gca()
+
+  for t in teams:
+    for kind in ["bad"]: #["good", "bad"]:
+      points_g = np.array(team_scores[kind][t])
+      ts_g = np.array(team_scores_timestamps[kind][t])
+
+      ts_g_u, ts_g_i = np.unique(ts_g, return_inverse = True)
+
+      points_g_u = np.zeros_like(ts_g_u)
+
+      for i, p in enumerate(points_g):
+        points_g_u[ts_g_i[i]] += p
+
+      ts_sort_i = np.argsort(ts_g_u)
+      ts_g_u = ts_g_u[ts_sort_i]
+      points_g_u[ts_sort_i] = points_g_u
+
+      points_g_u /= 1.0 * team_sizes[t]
+
+      ax.plot(ts_g_u, np.cumsum(points_g_u), label = t)
+      #ax.plot(ts_g_u, points_g_u, label = t)
+
+  leg = ax.legend()
+  leg.set_draggable(True)
+  #}}}
+
 
 #plot_stress_multihist()
 #plot_alcohol_multihist()
+#plot_team_cumulative_points()
 
 # mielen kiintoisia faktoja
 print("total sports hours: {} (variance {})".format(total_sports_hours, np.var(sports_hours)))
 print("total blackouts: {}".format(sum([x["bläkäri"] for x in alcohol.values()])))
 print("no. of well slept nights: {}".format(n_well_slept_nights))
+print("most dokattu:"); pprint(most_dokattu)
+print("least dokattu:"); pprint(least_dokattu)
+print("best food:"); pprint(best_food)
 
 plt.show(block = not ipython)
+
+# vim: set fdm=marker :
