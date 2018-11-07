@@ -87,8 +87,8 @@ figure
 hold on
 %grid on
 datetick('x','dd-mm-yyyy','keeplimits','keepticks')
-plot(days, cumsum(goodSums))
-plot(days, cumsum(badSums))
-plot(days, cumsum(goodSums - badSums))
+plot(days, (goodSums))
+plot(days, (badSums))
+plot(days, (goodSums - badSums))
 legend('Hyvinvointi', 'Pahoinvointi', 'Pisteiden erotus')
 ylabel('Pisteet')
