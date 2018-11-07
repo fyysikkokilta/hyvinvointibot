@@ -75,10 +75,12 @@ if not analysis_done or True:
   sports_hours = []
   n_well_slept_nights = 0
 
+  daily_points = {"good": defaultdict(float), "bad": defaultdict(float)}
+  daily_participants = {"good": defaultdict(set), "bad": defaultdict(set)}
+
   #for p in participants.find(): # dbm version
   for p in participants:
       h = p["history"]
-      #h_stress = [x for x in h if x["category"] == "stressi"]
 
       team = p["team"]
 
@@ -95,25 +97,38 @@ if not analysis_done or True:
           teams_alcohol[team][blast] += 1
 
         elif entry["category"] == "liikunta" and entry["params"][0] > 0:
-          #total_sports_hours += entry["params"][1]
+
           sports_hours.append(entry["params"][1])
+
         elif entry["category"] == "uni" and entry["params"][0] == "tosi hyvin":
+
           n_well_slept_nights += 1
 
         elif entry["category"] == "ruoka":
           teams_food[team][entry["params"][0]] += 1
 
-        t = entry["type"]
+        kind = entry["type"]
         team_scores[t][team].append(entry["value"])
         team_scores_timestamps[t][team].append(d)
 
-        teams[team].add(p["username"])
+        uname = p["username"]
+        teams[team].add(uname)
+
+        daily_points[kind][d] += entry["value"]
+        daily_participants[kind][d].add(uname)
 
   n_participants = len(participants)
   team_sizes = dict(map(lambda x: (x[0], len(x[1])), teams.items()))
 
   sports_hours = np.array(sports_hours)
   total_sports_hours = sum(sports_hours)
+
+  daily_counts = {}
+  for kind in ["good", "bad"]:
+    daily_counts[kind] = dict(
+        map(lambda x: (x[0], len(x[1])),
+          daily_participants[kind].items()
+        ))
 
   alcohol_weights = {
       "ei ollenkaan!" : 0, "no blast": 1, "medium blast": 2,
@@ -238,14 +253,51 @@ def plot_team_cumulative_points():
   leg.set_draggable(True)
   #}}}
 
+def plot_average_daily_points():
+
+  fig = plt.figure()
+  ax = fig.gca()
+
+  t_good = []
+  y_good = []
+
+  t_bad = []
+  y_bad = []
+
+  for k, v in daily_points["good"].items():
+    t_good.append(k)
+    y_good.append(v / daily_counts["good"][k])
+
+  for k, v in daily_points["bad"].items():
+    t_bad.append(k)
+    y_bad.append(v / daily_counts["bad"][k])
+
+  t_good = np.array(t_good)
+  y_good = np.array(y_good)
+  good_sort_i = np.argsort(t_good)
+  t_good = t_good[good_sort_i]
+  y_good = y_good[good_sort_i]
+
+  t_bad = np.array(t_bad)
+  y_bad = np.array(y_bad)
+  bad_sort_i = np.argsort(t_bad)
+  t_bad = t_bad[bad_sort_i]
+  y_bad = y_bad[bad_sort_i]
+
+  ax.plot(t_good + datetime.timedelta(days = -1), y_good, marker = "x")
+  ax.plot(t_bad + datetime.timedelta(days = -1), y_bad, marker = "x")
 
 #plot_stress_multihist()
 #plot_alcohol_multihist()
 #plot_team_cumulative_points()
+plot_average_daily_points()
 
 # mielen kiintoisia faktoja
 print("total sports hours: {} (variance {})".format(total_sports_hours, np.var(sports_hours)))
 print("total blackouts: {}".format(sum([x["bläkäri"] for x in alcohol.values()])))
+print("full blast count: {}".format(sum([x["full blast"] for x in alcohol.values()])))
+print("no blast count: {}".format(sum([x["no blast"] for x in alcohol.values()])))
+print("ei ollenkaan count: {}".format(sum([x["ei ollenkaan!"] for x in alcohol.values()])))
 print("no. of well slept nights: {}".format(n_well_slept_nights))
 print("most dokattu:"); pprint(most_dokattu)
 print("least dokattu:"); pprint(least_dokattu)
