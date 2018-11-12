@@ -17,6 +17,12 @@ Plot/statistics ideas:
   - jokaiselle joukkueelle hyvin/pahoinvoivin yksittäinen päivä
 
   - stressaantunein / dokatuin / parhaiten syönyt / parhaiten nukkunut tms tiimi
+
+  - eniten alkoholipisteitä kerännyt henkilö
+  - eniten liikuntapisteitä kerännyt henkilö
+  - eniten stressipisteitä kerännyt henkilö
+  - eniten / vähiten nukkunut henkilö
+  - eniten hyvin/huonosti syönyt henkilö
 """
 
 plt.close("all")
