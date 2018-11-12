@@ -329,8 +329,8 @@ print("\npahimmat tissuttelijat:"); pprint(max(teams_alcohol.items(), key = lamb
 print("\nbest food:"); pprint(best_food)
 
 def print_rankings(kind):
-  for (name, score) in rankings[kind].items():
-    print("{} - {:.2f}".format(name, score))
+  for (i, (name, score)) in enumerate(rankings[kind].items()):
+    print("{:2}. {} - {:.2f}".format(i + 1, name, score))
 
 print("\n"); print("RANKINGS:\n");
 print("Hyvinvointi:\n");  print_rankings("good");    print("\n")
