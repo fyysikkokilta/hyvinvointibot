@@ -3,8 +3,8 @@ import json
 from pprint import pprint
 import numpy as np
 import matplotlib.pyplot as plt
-import datetime 
-from collections import defaultdict
+import datetime
+from collections import defaultdict, OrderedDict
 
 """
 Plot/statistics ideas:
@@ -39,7 +39,8 @@ except NameError:
 if not analysis_done or True:
   print("redoing analysis")
 
-  data_filename = "database-export.json"
+  #data_filename = "database-export.json"
+  data_filename = "database-export-2018-11-12-111740.json"
   with open(data_filename, "r") as f:
     participants = json.loads(f.read())
 
@@ -63,7 +64,7 @@ if not analysis_done or True:
 
       scores.append((username, good, bad))
 
-  team_scores = {"good": defaultdict(list), "bad": defaultdict(list) }
+  team_scores = {"good": defaultdict(list), "bad": defaultdict(list)}
   team_scores_timestamps = {"good": defaultdict(list), "bad": defaultdict(list) }
   teams = defaultdict(set)
 
@@ -108,17 +109,40 @@ if not analysis_done or True:
           teams_food[team][entry["params"][0]] += 1
 
         kind = entry["type"]
-        team_scores[kind][team].append(entry["value"])
+        value = entry["value"]
+        team_scores[kind][team].append(value)
         team_scores_timestamps[kind][team].append(d)
 
         uname = p["username"]
         teams[team].add(uname)
 
-        daily_points[kind][d] += entry["value"]
+        daily_points[kind][d] += value
         daily_participants[kind][d].add(uname)
 
   n_participants = len(participants)
   team_sizes = dict(map(lambda x: (x[0], len(x[1])), teams.items()))
+
+  def rescale_points(point_list, team_name): return sum(point_list) * 10.0 / team_sizes[team_name]
+
+  def get_rankings(kind):
+    scores = team_scores[kind].items()
+    scores = map(lambda x: (x[0], rescale_points(x[1], x[0])), scores)
+    scores = list(scores)
+    scores.sort(key = lambda x: -x[1])
+    return OrderedDict(scores)
+
+  rankings = {
+      "good": get_rankings("good"),
+      "bad": get_rankings("bad"),
+  }
+  rankings["sum abs"] = OrderedDict(sorted(
+      [(name, rankings["good"][name] + rankings["bad"][name]) for name in team_sizes.keys()],
+      key = lambda x: -x[1]
+      ))
+  rankings["diff"] = OrderedDict(sorted(
+      [(name, rankings["good"][name] - rankings["bad"][name]) for name in team_sizes.keys()],
+      key = lambda x: -x[1]
+      ))
 
   sports_hours = np.array(sports_hours)
   total_sports_hours = sum(sports_hours)
@@ -290,7 +314,7 @@ def plot_average_daily_points():
 #plot_stress_multihist()
 #plot_alcohol_multihist()
 #plot_team_cumulative_points()
-plot_average_daily_points()
+#plot_average_daily_points()
 
 # mielen kiintoisia faktoja
 print("total sports hours: {} (variance {})".format(total_sports_hours, np.var(sports_hours)))
@@ -303,6 +327,16 @@ print("\nmost dokattu:"); pprint(most_dokattu)
 print("\nleast dokattu:"); pprint(least_dokattu)
 print("\npahimmat tissuttelijat:"); pprint(max(teams_alcohol.items(), key = lambda x: x[1]["no blast"]))
 print("\nbest food:"); pprint(best_food)
+
+def print_rankings(kind):
+  for (name, score) in rankings[kind].items():
+    print("{} - {:.2f}".format(name, score))
+
+print("\n"); print("RANKINGS:\n");
+print("Hyvinvointi:\n");  print_rankings("good");    print("\n")
+print("Pahoinvointi:\n"); print_rankings("bad");     print("\n")
+print("sum abs:\n");      print_rankings("sum abs"); print("\n")
+print("diff:\n");         print_rankings("diff");
 
 plt.show(block = not ipython)
 
