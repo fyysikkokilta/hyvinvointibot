@@ -18,11 +18,11 @@ Plot/statistics ideas:
 
   - stressaantunein / dokatuin / parhaiten syönyt / parhaiten nukkunut tms tiimi
 
-  - eniten alkoholipisteitä kerännyt henkilö
-  - eniten liikuntapisteitä kerännyt henkilö
-  - eniten stressipisteitä kerännyt henkilö
-  - eniten / vähiten nukkunut henkilö
-  - eniten hyvin/huonosti syönyt henkilö
+  - eniten alkoholipisteitä kerännyt joukkue
+  - eniten liikuntapisteitä kerännyt joukkue
+  - eniten stressipisteitä kerännyt joukkue
+  - eniten / vähiten nukkunut joukkue
+  - eniten hyvin/huonosti syönyt joukkue
 """
 
 plt.close("all")
