@@ -17,6 +17,12 @@ Plot/statistics ideas:
   - jokaiselle joukkueelle hyvin/pahoinvoivin yksittäinen päivä
 
   - stressaantunein / dokatuin / parhaiten syönyt / parhaiten nukkunut tms tiimi
+
+  - eniten alkoholipisteitä kerännyt joukkue
+  - eniten liikuntapisteitä kerännyt joukkue
+  - eniten stressipisteitä kerännyt joukkue
+  - eniten / vähiten nukkunut joukkue
+  - eniten hyvin/huonosti syönyt joukkue
 """
 
 plt.close("all")
@@ -72,6 +78,9 @@ if not analysis_done or True:
   alcohol = defaultdict(lambda: defaultdict(int))
   teams_alcohol = defaultdict(lambda: defaultdict(int))
   teams_food = defaultdict(lambda: defaultdict(int))
+  teams_sleep = defaultdict(lambda: defaultdict(int))
+  teams_sports = defaultdict(float)
+  teams_stress = defaultdict(lambda: defaultdict(int))
 
   sports_hours = []
   n_well_slept_nights = 0
@@ -89,7 +98,11 @@ if not analysis_done or True:
         d = datetime.datetime.fromtimestamp(entry["timestamp"]).date()
         dow = (d.weekday() - 1) % 7
         if entry["category"] == "stressi":
-          stress[dow][entry["params"][0]] += 1
+
+          amount = entry["params"][0]
+          teams_stress[team][amount] += 1
+          stress[dow][amount] += 1
+
         elif entry["category"] == "alkoholi":
 
           blast = entry["params"][0]
@@ -97,13 +110,20 @@ if not analysis_done or True:
 
           teams_alcohol[team][blast] += 1
 
-        elif entry["category"] == "liikunta" and entry["params"][0] > 0:
+        elif entry["category"] == "liikunta":
 
-          sports_hours.append(entry["params"][1])
+          teams_sports[team] += entry["value"]
 
-        elif entry["category"] == "uni" and entry["params"][0] == "tosi hyvin":
+          if entry["params"][0] > 0:
+            sports_hours.append(entry["params"][1])
 
-          n_well_slept_nights += 1
+        elif entry["category"] == "uni":
+
+          sleep_quality = entry["params"][0]
+          teams_sleep[team][sleep_quality] += 1
+
+          if sleep_quality == "tosi hyvin":
+            n_well_slept_nights += 1
 
         elif entry["category"] == "ruoka":
           teams_food[team][entry["params"][0]] += 1
@@ -159,23 +179,62 @@ if not analysis_done or True:
       "full blast": 3, "bläkäri": 4
       }
 
+  food_weights = {
+      "huonosti": -1,
+      "normipäivä": 0.1,
+      "tavallista paremmin": 1,
+      "panostin tänään": 2,
+      }
+
+  sleep_weights = {
+      "tosi hyvin": 1,
+      "riittävästi": 0.2,
+      "melko huonosti": -0.5,
+      "todella huonosti": -1,
+      }
+
+  stress_weights = {
+      "paljon": 2,
+      "vähän": 1,
+      "en lainkaan": -0.1,
+      }
+
+  def weighted_sum(points_tuple, weights):
+    size = team_sizes[points_tuple[0]]
+    return sum([weights[name] * count for (name, count) in points_tuple[1].items()])
+
   most_dokattu = max(teams_alcohol.items(),
-      key = lambda x: sum([alcohol_weights[y[0]] * y[1] for y in x[1].items()]) / team_sizes[x[0]]
+      key = lambda x: weighted_sum(x, alcohol_weights)
       )
 
   least_dokattu = max(teams_alcohol.items(),
       key = lambda x: x[1]["ei ollenkaan!"] / team_sizes[x[0]]
       )
 
-  food_weights = {
-      "huonosti": 0,
-      "normipäivä": 0,
-      "tavallista paremmin": 1,
-      "panostin tänään": 2,
-      }
+  tissuttelu = max(teams_alcohol.items(), key = lambda x: x[1]["no blast"] / team_sizes[x[0]])
+
+  most_sporty = max(teams_sports.items(), key = lambda x: x[1] / team_sizes[x[0]])
 
   best_food = max(teams_food.items(),
-      key = lambda x: sum([food_weights[y[0]] * y[1] for y in x[1].items()]) / team_sizes[x[0]]
+      #key = lambda x: sum([food_weights[y[0]] * y[1] for y in x[1].items()]) / team_sizes[x[0]]
+      key = lambda x: weighted_sum(x, food_weights)
+      )
+
+  worst_food = min(teams_food.items(),
+      #key = lambda x: sum([food_weights[y[0]] * y[1] for y in x[1].items()]) / team_sizes[x[0]]
+      key = lambda x: weighted_sum(x, food_weights)
+      )
+
+  best_sleep = max(teams_sleep.items(),
+      key = lambda x: weighted_sum(x, sleep_weights)
+      )
+
+  worst_sleep = min(teams_sleep.items(),
+      key = lambda x: weighted_sum(x, sleep_weights)
+      )
+
+  most_stress = max(teams_stress.items(),
+      key = lambda x: weighted_sum(x, stress_weights)
       )
 
   analysis_done = True
@@ -316,6 +375,9 @@ def plot_average_daily_points():
 #plot_team_cumulative_points()
 #plot_average_daily_points()
 
+def print_team_points_dict(s, tup):
+  print(s.format(tup[0], dict(tup[1])))
+
 # mielen kiintoisia faktoja
 print("total sports hours: {} (variance {})".format(total_sports_hours, np.var(sports_hours)))
 print("total blackouts: {}".format(sum([x["bläkäri"] for x in alcohol.values()])))
@@ -323,20 +385,25 @@ print("full blast count: {}".format(sum([x["full blast"] for x in alcohol.values
 print("no blast count: {}".format(sum([x["no blast"] for x in alcohol.values()])))
 print("ei ollenkaan count: {}".format(sum([x["ei ollenkaan!"] for x in alcohol.values()])))
 print("no. of well slept nights: {}".format(n_well_slept_nights))
-print("\nmost dokattu:"); pprint(most_dokattu)
-print("\nleast dokattu:"); pprint(least_dokattu)
-print("\npahimmat tissuttelijat:"); pprint(max(teams_alcohol.items(), key = lambda x: x[1]["no blast"]))
-print("\nbest food:"); pprint(best_food)
+print_team_points_dict("\ndokatuin joukkue:\n{}\n{}", most_dokattu)
+print_team_points_dict("\nvähiten dokattu joukkue:\n{}\n{}:", least_dokattu)
+print_team_points_dict("\npahimmat tissuttelijat (eniten no blast merkintöjä):\n{}\n{}", tissuttelu)
+print("\neniten urheilupisteitä: {} - {}".format(* most_sporty))
+print_team_points_dict("\nparhaiten nukkuneet:\n{}\n{}", best_sleep)
+print_team_points_dict("\nhuonoiten nukkuneet:\n{}\n{}", worst_sleep)
+print_team_points_dict("\nparhaiten syöneet:\n{}\n{}", best_food)
+print_team_points_dict("\nhuonoiten syöneet:\n{}\n{}", worst_food)
 
 def print_rankings(kind):
   for (i, (name, score)) in enumerate(rankings[kind].items()):
     print("{:2}. {} - {:.2f}".format(i + 1, name, score))
 
-print("\n"); print("RANKINGS:\n");
-print("Hyvinvointi:\n");  print_rankings("good");    print("\n")
-print("Pahoinvointi:\n"); print_rankings("bad");     print("\n")
-print("sum abs:\n");      print_rankings("sum abs"); print("\n")
-print("diff:\n");         print_rankings("diff");
+if False: # print  final rankings
+  print("\n"); print("RANKINGS:\n");
+  print("Hyvinvointi:\n");  print_rankings("good");    print("\n")
+  print("Pahoinvointi:\n"); print_rankings("bad");     print("\n")
+  print("sum abs:\n");      print_rankings("sum abs"); print("\n")
+  print("diff:\n");         print_rankings("diff");
 
 plt.show(block = not ipython)
 
