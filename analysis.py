@@ -24,7 +24,18 @@ Plot/statistics ideas:
   - eniten hyvin/huonosti syönyt joukkue -- done
 """
 
+PALETTE = {
+    "blue" : "#1ea8b5",
+    "orange": "tab:orange",
+    "red": "tab:red",
+    "green" : "#046b41",
+    }
+
 plt.close("all")
+
+plt.rcParams["savefig.transparent"] = True
+plt.rcParams["savefig.directory"] = None
+plt.rcParams["savefig.format"] = "eps"
 
 ipython = False
 try:
@@ -273,9 +284,11 @@ def plot_stress_multihist():
   fig = plt.figure()
   ax = fig.gca()
 
-  stress1 = np.array([x["en lainkaan"] for x in stress.values()])
-  stress2 = np.array([x["vähän"] for x in stress.values()])
-  stress3 = np.array([x["paljon"] for x in stress.values()])
+  stress_totals = 1.0 * np.array([sum(stress[i].values()) for i in range(7)])
+
+  stress1 = np.array([x["en lainkaan"] for x in stress.values()]) / stress_totals
+  stress2 = np.array([x["vähän"] for x in stress.values()]) / stress_totals
+  stress3 = np.array([x["paljon"] for x in stress.values()]) / stress_totals
   days = np.arange(7)
 
   days_labels = ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"]
@@ -283,22 +296,29 @@ def plot_stress_multihist():
 
   bar_w = 0.2
 
-  ax.bar(days - bar_w, stress1, width = bar_w, label = stress_labels[0])
-  ax.bar(days        , stress2, width = bar_w, label = stress_labels[1])
-  ax.bar(days + bar_w, stress3, width = bar_w, label = stress_labels[2])
+  ax.bar(days - bar_w, stress1, width = bar_w, label = stress_labels[0], color = PALETTE["blue"])
+  ax.bar(days        , stress2, width = bar_w, label = stress_labels[1], color=PALETTE["orange"])
+  ax.bar(days + bar_w, stress3, width = bar_w, label = stress_labels[2], color=PALETTE["red"])
   #ax.bar(days        , stress2 + stress3, width = bar_w)
 
-  ax.set_ylabel("Merkintöjen lkm")
+  #ax.set_ylabel("Suhteellinen stressimerkintöjen lkm")
+  ax.set_ylabel("Suhteellinen osuus stressimerkinnöistä")
 
   ax.set_xticks(days)
   ax.set_xticklabels(days_labels)
-  ax.set_ylim([0, 120])
+  #ax.set_ylim([0, 120])
 
-  leg = ax.legend()
+  for d in ["right", "top"]:
+    ax.spines[d].set_visible(False)
+
+  leg = ax.legend(ncol = 3, bbox_to_anchor = (0, 1.1), loc = "upper left")
   #leg.set_draggable(True)
   leg.draggable()
 
-  ax.set_title("Stressimerkinnät eri viikonpäiville")
+  #ax.set_title("Stressimerkinnät eri viikonpäiville")
+
+  fig.savefig("stressi.eps", transparent = True)
+
   #}}}
 
 def plot_alcohol_multihist():
@@ -306,34 +326,51 @@ def plot_alcohol_multihist():
   fig = plt.figure()
   ax = fig.gca()
 
-  alc1 = np.array([x["no blast"] for x in alcohol.values()])
-  alc2 = np.array([x["medium blast"] for x in alcohol.values()])
-  alc3 = np.array([x["full blast"] for x in alcohol.values()])
-  alc4 = np.array([x["bläkäri"] for x in alcohol.values()])
+  alcohol_totals = 1.0 * np.array([sum(alcohol[i].values()) for i in range(7)])
+
+  alc0 = np.array([x["ei ollenkaan!"] for x in alcohol.values()]) / alcohol_totals * 100
+  alc1 = np.array([x["no blast"] for x in alcohol.values()]) / alcohol_totals * 100
+  alc2 = np.array([x["medium blast"] for x in alcohol.values()]) / alcohol_totals * 100
+  alc3 = np.array([x["full blast"] for x in alcohol.values()]) / alcohol_totals * 100
+  alc4 = np.array([x["bläkäri"] for x in alcohol.values()]) / alcohol_totals * 100
   days = np.arange(7) * 2
 
   days_labels = ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"]
-  alcohol_labels = ['No blast', 'Medium blast', "Full blast", 'Bläkäri']
+  alcohol_labels = ["Ei ollenkaan", 'No blast', 'Medium blast', "Full blast", 'Bläkäri']
 
   bar_w = 0.4
 
-  ax.bar(days - 1.5*bar_w, alc1, width = bar_w, label = alcohol_labels[0], align = "center")
-  ax.bar(days - 0.5*bar_w, alc2, width = bar_w, label = alcohol_labels[1], align = "center")
-  ax.bar(days + 0.5*bar_w, alc3, width = bar_w, label = alcohol_labels[2], align = "center")
-  ax.bar(days + 1.5*bar_w, alc4, width = bar_w, label = alcohol_labels[3], align = "center")
-  #ax.bar(days        , stress2 + stress3, width = bar_w)
+  #ax.bar(days - 2*bar_w, alc0, width = bar_w, label = alcohol_labels[0], align = "center")
+  #ax.bar(days - 1*bar_w, alc1, width = bar_w, label = alcohol_labels[1], align = "center")
+  #ax.bar(days - 0*bar_w, alc2, width = bar_w, label = alcohol_labels[2], align = "center")
+  #ax.bar(days + 1*bar_w, alc3, width = bar_w, label = alcohol_labels[3], align = "center")
+  #ax.bar(days + 2*bar_w, alc4, width = bar_w, label = alcohol_labels[4], align = "center")
 
-  ax.set_ylabel("Merkintöjen lkm")
+  # don't plot 'ei ollenkaan'
+  ax.bar(days - 1.5*bar_w, alc1, width = bar_w, label = alcohol_labels[1], align = "center", zorder = 2, color = PALETTE["green"])
+  ax.bar(days - 0.5*bar_w, alc2, width = bar_w, label = alcohol_labels[2], align = "center", zorder = 2, color = PALETTE["blue"])
+  ax.bar(days + 0.5*bar_w, alc3, width = bar_w, label = alcohol_labels[3], align = "center", zorder = 2, color = "tab:orange")
+  ax.bar(days + 1.5*bar_w, alc4, width = bar_w, label = alcohol_labels[4], align = "center", zorder = 2, color = "tab:red")
+
+  ax.set_ylabel(r"Suhteellinen osuus alkoholimerkinnöistä (%)")
 
   ax.set_xticks(days)
   ax.set_xticklabels(days_labels)
   #ax.set_ylim([0, 120])
 
+  for d in ["right", "top"]:
+    ax.spines[d].set_visible(False)
+
   leg = ax.legend()
   #leg.set_draggable(True)
   leg.draggable()
 
-  ax.set_title("Alkoholimerkinnät eri viikonpäiville")
+  ax.yaxis.grid("on", zorder = 1)
+
+  #ax.set_title("Alkoholimerkinnät eri viikonpäiville")
+
+  fig.savefig("alkoholi.eps", transparent = True)
+
   #}}}
 
 def plot_team_cumulative_points():
@@ -383,30 +420,67 @@ def plot_average_daily_points():
 
   for k, v in daily_points["good"].items():
     t_good.append(k)
-    y_good.append(v / daily_counts["good"][k])
+    y_good.append(1.0 * v / daily_counts["good"][k])
 
   for k, v in daily_points["bad"].items():
     t_bad.append(k)
-    y_bad.append(v / daily_counts["bad"][k])
+    y_bad.append(1.0 * v / daily_counts["bad"][k])
 
   t_good = np.array(t_good)
   y_good = np.array(y_good)
   good_sort_i = np.argsort(t_good)
-  t_good = t_good[good_sort_i]
-  y_good = y_good[good_sort_i]
+  t_good = t_good[good_sort_i].astype(np.datetime64)
+  y_good = y_good[good_sort_i] * 10.0
 
   t_bad = np.array(t_bad)
   y_bad = np.array(y_bad)
   bad_sort_i = np.argsort(t_bad)
-  t_bad = t_bad[bad_sort_i]
-  y_bad = y_bad[bad_sort_i]
+  t_bad = t_bad[bad_sort_i].astype(np.datetime64)
+  y_bad = y_bad[bad_sort_i] * 10.0
 
-  ax.plot(t_good + datetime.timedelta(days = -1), y_good, marker = "x")
-  ax.plot(t_bad + datetime.timedelta(days = -1), y_bad, marker = "x")
+  legend_labels = []
+  legend_lines = []
+
+  for i, friday in enumerate(t_good[np.is_busday(t_good, weekmask = "Fri")] + np.timedelta64(1, "D")):
+    #fri_limits = [min(y_bad.min(), y_good.min()), max(y_bad.max(), y_good.max())]
+    fri_limits = [0, 100]
+    l = ax.plot( [friday, friday], fri_limits,
+        color = PALETTE["red"], alpha = 0.5, linestyle = "--",
+        #label = "Perjantai" if i == 0 else None
+        zorder = 1
+        )
+    if i == 0:
+      legend_labels.append("Perjantai")
+      legend_lines.append(l[0])
+
+  l = ax.plot(t_bad , y_bad,  marker = "x", color = PALETTE["red"])
+  legend_labels.append("Pahoinvointi")
+  legend_lines.append(l[0])
+
+  l = ax.plot(t_good, y_good, marker = "x", color = PALETTE["blue"])
+  legend_labels.append("Hyvinvointi")
+  legend_lines.append(l[0])
+
+
+  ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m."))
+
+  ax.set_ylabel("Keskimääräiset pisteet per osallistuja")
+
+  leg = ax.legend(legend_lines[::-1], legend_labels[::-1])
+  #leg.draggable()
+
+  ax.set_ylim((17,37))
+  ax.set_yticks(np.arange(18, 39, 4))
+
+  for d in ["right", "top"]:
+    ax.spines[d].set_visible(False)
+
+  fig.savefig("pisteet_per_osallistuja.eps", transparent = True)
 
   #}}}
 
 def plot_average_daily_alcohol():
+  #{{{
   fig = plt.figure()
   ax2 = fig.gca()
   ax = ax2.twinx()
@@ -428,11 +502,12 @@ def plot_average_daily_alcohol():
   lines_to_label = []
   labels = []
 
-  l = ax.plot(t, a * 1.0 / c, marker = "s", zorder = 20)
+  l = ax.plot(t, a * 1.0 / c, marker = "s", zorder = 20, color = PALETTE["blue"])
   lines_to_label.append(l[0])
   labels.append("Alkoholipisteet")
 
-  red = "#d62728"
+  #red = "#d62728"
+  red = PALETTE["red"]
   for i, t1 in enumerate(t_bo):
     l = ax2.plot([t1, t1], [0, bo[i]],
         color = red, linewidth = 10,
@@ -453,7 +528,7 @@ def plot_average_daily_alcohol():
       lines_to_label.append(l[0])
       labels.append("Perjantai")
 
-  ax.set_ylabel("Alkoholipisteet / Osallistuja")
+  ax.set_ylabel("Alkoholipisteet / osallistuja")
   ax2.set_ylabel("Bläkärien lkm")
 
   ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m."))
@@ -465,6 +540,8 @@ def plot_average_daily_alcohol():
 
   leg = ax2.legend(lines_to_label[::-1], labels[::-1])
   leg.draggable()
+
+  #}}}
 
 #plot_stress_multihist()
 #plot_alcohol_multihist()
