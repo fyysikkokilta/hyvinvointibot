@@ -17,12 +17,15 @@ from strings import USER_HISTORY_COUNT_PROMPT, ALL_ITEMS_ADDED_FOR_TODAY_MESSAGE
 from strings import ADDING_MANY_FINISHED_MESSAGE, NOT_PARTICIPANT_MESSAGE
 from strings import ADDING_MANY_CANCEL_MESSAGE, ADDING_MANY_CANCELING_MESSAGE
 from strings import ADDING_MANY_START_MESSAGE, ITEM_ALREADY_ADDED_FOR_TODAY_MESSAGE
-from strings import RANK_MESSAGE, INFO_MESSAGE
+from strings import RANK_MESSAGE, INFO_MESSAGE, COMPETITION_OVER_MESSAGE
 
 from scoring import GOOD_KEY, BAD_KEY
 
 from dbmanager import DBManager, TEAM_KEY, MEMBER_COUNT_KEY
 from utils import is_today
+
+# starting at 00:00 this day, points cannot be added any more
+COMPETITION_CLOSE_DATE = datetime.date(year = 2018, month = 11, day = 12)
 
 # globals, might be defined in functions
 BOT_TIMEOUT = 30 * 60 # 5 minutes
@@ -127,6 +130,11 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
         # check if the user is a participant (all participants should have a username)
         if "username" not in msg["from"] or not dbm.is_participant(msg["from"]["username"]):
             self.sender.sendMessage(NOT_PARTICIPANT_MESSAGE)
+            return
+
+        # check if the competition has ended
+        if datetime.datetime.today().date() >= COMPETITION_CLOSE_DATE: # or msg["from"]["username"] == "martong":
+            self.sender.sendMessage(COMPETITION_OVER_MESSAGE, parse_mode = "markdown")
             return
 
         username = msg["from"]["username"]

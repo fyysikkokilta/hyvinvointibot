@@ -74,6 +74,14 @@ Sijoitus - joukkue (pahoinvointipisteet)
 Pisteet päivitetty {}.
 """
 
+COMPETITION_OVER_MESSAGE = """
+Hyvinvointikilpailu on päättynyt. Kiitos osallistumisesta! Tulokset julkaistaan killan pikkujouluissa 13.11., joten kannattaa tulla paikalle!
+
+Hyvinvointikisa järjestettiin tänä vuonna hyvin pitkän tauon jälkeen ja ensimmäistä kertaa Telegram-bottina. Kaikki ei varmastikaan mennyt ensimmäisellä iteraatiolla nappiin, joten toivoisimme palautetta osallistujilta, jotta ensi kerralla kilpailusta saataisiin entistä parempi! Palautteen antamiseen ei mene pitkään, eikä kaikkiin kysymyksiin tarvitse vastata.
+Palautelomake löytyy [täältä](http://???).
+"""
+
+
 #TODO: good?
 INFO_MESSAGE = """
 Tietoja käyttäjästä {username}:
