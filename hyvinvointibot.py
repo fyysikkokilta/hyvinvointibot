@@ -35,33 +35,10 @@ BOT_USERNAME = None
 # update points every this many hours
 UPDATE_POINTS_INTERVAL_H = 4
 
-#TODO: here's a list of larger scale TODO's / goals
 """
-TODOx: database
-    x teams ~~ done
-    x remove entries - done
-    x show rankings -- done
-        x score index: divide by first position x 100
-        x show pahoinvointi in reverse order(?)
-TODOx: /lisaapaiva -- DONE
-TODOx: /rank -- done
-TODOx: all conversation paths -- done
-TODOx: score functions -- done
-TODOx: back button to all 'button' conversations ~ done
-TODOx: prevent duplicates of the event for the same day ~ done
-TODOx: merge to master, remane hyvivointibot2 -> hyvinvointibot, stringtree -> strings -- done
-TODOx: /aboutme (?): show info about me (team, username, history, team members?) ~~ done
-    - team info (show members for a given team), show ranking + index ? -- done
-TODO: hottiksen tapahtumat???
-    - only possible to add them after the event?
-TODOx: /info command - "/info alkoholi" - show info about alcohol (?) -- not gonna do
-TODO: BOT_ADMIN constant
-TODOx: update scores only once per day ~~ done
-
 bugs / feature requests / feedback:
-idea: /poista -> allow replacing entry directly
-idea: update /rank results only once per day (how?)
-idea/feedback: different message for different values of liikunta numeric value?
+idea: /poista -> directly enter new value for deleted entry
+idea: different message for different values of liikunta numeric value?
 """
 
 dbm = DBManager()
@@ -322,7 +299,6 @@ class HyvinvointiChat(telepot.helper.ChatHandler):
 
                 # all leaves should have a score function
                 #pprint(self.current_score_parameters)
-                #TODO: add try-except? might throw an error if there are typos or anything
                 score_obj = next_message["score_func"](self.current_score_parameters)
                 #pprint(score_obj)
 

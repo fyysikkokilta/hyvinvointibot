@@ -10,8 +10,8 @@ It works by asking questions from users and storing the answers and associated g
     sudo pip3 install pymongo telepot
     ```
     If you want to run the analysis script, you should also `sudo pip3 install numpy matplotlib`.
-1. `git clone https://github.com/fyysikkokilta/hyvinvointibot.git && cd hyvinvointibot`.
+1. `git clone https://github.com/Fyysikkokilta/hyvinvointibot.git && cd hyvinvointibot`.
 1. Put your bot token in `token.txt` in the root directory of the repo
-1. Check the competititon start and end dates in ???
+1. Check the competititon end date in `hyvinvointibot.py`
 1. Run the bot: `python3 hyvinvointibot.py`
-1. If you want to analyze the data in the database, run `python3 dbmanager.py --export` and update `data_filename` in `analysis.py`, and then run `python3 analysis.py`. Check the source code for details.
+1. If you want to analyze the data in the database, run `python3 dbmanager.py --export`, update `data_filename` in `analysis.py`, and then run `python3 analysis.py`. Check the source code for details.
