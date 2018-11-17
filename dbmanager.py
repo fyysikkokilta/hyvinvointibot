@@ -54,12 +54,12 @@ def parse_teams_and_add_to_db(filename):
                                 },
                             )
                     count += 1
-                    print("added: {} - {}".format(team_name, username))
+                    print("Added: {} - {}".format(team_name, username))
 
                 except DuplicateKeyError:
-                    print("already exists: {} - {}".format(team_name, username))
+                    print("Already exists: {} - {}".format(team_name, username))
 
-        print("added {} new participants".format(count))
+        print("Added {} new participants".format(count))
 
 class DBManager():
     def __init__(self):
@@ -230,10 +230,37 @@ class DBManager():
             res["timestamp"] = t # very dirty
             self.team_points.update_one({"_id": res["_id"]}, {"$set": res}, upsert = True)
 
+## class DBManager
+
+def export_db():
+    """
+    Export the database to a JSON file.
+    """
+    import json
+    dbm = DBManager()
+    data = list(dbm.participants.find({}, projection = {"_id": False}))
+    filename = "database-export-{}.json".format(datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S"))
+    with open(filename, "w") as f:
+        f.write(json.dumps(data, indent = 4))
+    print("Exported data to {}".format(filename))
+
+
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) < 2:
-        print("please provide the name of a text file for parsing as a command line argument.")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("teams.txt", help = "Text file containing teams. See teams.txt for formatting instructions.", nargs="?")
+    parser.add_argument("--export", help = "Export the database contents in JSON format.", action = "store_true")
+
+    args = parser.parse_args()
+
+    if args.export:
+        export_db()
         sys.exit()
 
-    parse_teams_and_add_to_db(sys.argv[1])
+    teams_filename = vars(args)["teams.txt"]
+
+    if teams_filename is None:
+        parser.error("If no other options are given, please provide the name of a text file for parsing as a command line argument.")
+
+    parse_teams_and_add_to_db(teams_filename)
